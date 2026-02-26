@@ -79,7 +79,7 @@ const AboutManifesto = () => {
                         </div>
                         <div className="p-6 font-mono flex flex-col justify-between flex-grow">
                             <div>
-                                <p className="font-bold text-lg mb-2 text-black"><span className="text-gray-600 mr-2">NAME:</span>[Your Name]</p>
+                                <p className="font-bold text-lg mb-2 text-black"><span className="text-gray-600 mr-2">NAME:</span>Bireshwar Kundu</p>
                                 <p className="font-bold text-lg mb-2 text-black"><span className="text-gray-600 mr-2">ROLE:</span>Full-Stack & AI</p>
                                 <p className="font-bold text-lg mb-4 text-black"><span className="text-gray-600 mr-2">MISSION:</span>Bridging AI and Urban Sustainability.</p>
                             </div>
