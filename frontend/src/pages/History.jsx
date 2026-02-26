@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import DataTable from '../components/DataTable';
+import BackToHomeButton from '../components/BackToHomeButton';
 
 const History = () => {
     const [data, setData] = useState([]);
@@ -41,6 +42,8 @@ const History = () => {
                     <DataTable data={data} />
                 )}
             </div>
+
+            <BackToHomeButton />
         </div>
     );
 };

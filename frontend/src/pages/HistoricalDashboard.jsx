@@ -4,6 +4,7 @@ import SeasonalTrendChart from '../components/charts/SeasonalTrendChart';
 import CityHeartbeatChart from '../components/charts/CityHeartbeatChart';
 import DailyCalendarChart from '../components/charts/DailyCalendarChart';
 import WindRoseChart from '../components/charts/WindRoseChart';
+import BackToHomeButton from '../components/BackToHomeButton';
 
 const HistoricalDashboard = () => {
     return (
@@ -39,6 +40,8 @@ const HistoricalDashboard = () => {
                 {/* Wind Rose */}
                 <WindRoseChart />
             </div>
+
+            <BackToHomeButton />
         </div>
     );
 };
