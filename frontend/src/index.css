@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #FDFBF7;
+    color: #000000;
+  }
+}
+
+@theme {
+  --animate-marquee: marquee 10s linear infinite;
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@layer utilities {
+  .shadow-text {
+    text-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
+    -webkit-text-stroke: 2px black;
+    color: white;
+  }
+}
