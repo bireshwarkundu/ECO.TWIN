@@ -12,7 +12,7 @@ const HomepageContainer = () => {
                 </div>
                 <div className="hidden md:flex gap-6 font-mono uppercase font-bold text-lg">
                     {['Dashboard', 'Models', 'About'].map((link) => (
-                        <a key={link} href={link === 'Models' ? "/models" : (link === 'Dashboard' ? "/dashboard" : "#")} className="hover:bg-[#FFCC00] px-3 py-1 border-2 border-transparent hover:border-black transition-colors">
+                        <a key={link} href={link === 'Models' ? "/models" : (link === 'Dashboard' ? "/dashboard" : "/about")} className="hover:bg-[#FFCC00] px-3 py-1 border-2 border-transparent hover:border-black transition-colors">
                             {link}
                         </a>
                     ))}
