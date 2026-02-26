@@ -159,6 +159,25 @@ const ModelsSimulation = () => {
     const [isSimulating, setIsSimulating] = useState(false);
     const [simResult, setSimResult] = useState(null);
 
+    const handleExportData = () => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Pollutant,Time,Historical,Predicted\n";
+
+        Object.entries(forecastDataSets).forEach(([pollutant, data]) => {
+            data.forEach(row => {
+                csvContent += `${pollutant},${row.time},${row.past || ''},${row.future || ''}\n`;
+            });
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "bidhannagar_forecast_data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const handleRunSimulation = () => {
         setIsSimulating(true);
         setSimResult(null);
@@ -490,7 +509,7 @@ const ModelsSimulation = () => {
                         </div>
                     </div>
 
-                    <button className="bg-[#00CFFF] border-4 border-black w-full py-4 text-2xl font-black uppercase flex items-center justify-center gap-3 mt-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-2 active:translate-y-2 active:shadow-none transition-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    <button onClick={handleExportData} className="bg-[#00CFFF] border-4 border-black w-full py-4 text-2xl font-black uppercase flex items-center justify-center gap-3 mt-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-2 active:translate-y-2 active:shadow-none transition-none" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                         <Download size={28} strokeWidth={3} /> EXPORT DATA (CSV)
                     </button>
                 </div>
