@@ -1,4 +1,4 @@
-# 🏙️ EcoTwin: Urban Planner (Neo-Brutalist Edition)
+# 🏙️ EcoTwin: Urban Planner
 
 EcoTwin is a full-stack Web Application designed as a predictive Digital Twin platform for urban environments (e.g., Bidhannagar/Sector V). It focuses on tracking, predicting, and exploring environmental metrics like CO2, PM2.5, NO2, and Traffic Density.
 
