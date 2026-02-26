@@ -42,10 +42,10 @@ const formatLocalDate = (dateString) => {
 // Helper function to format full date for tooltip
 const formatFullDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('default', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
+    return date.toLocaleDateString('default', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
     });
 };
 
@@ -67,16 +67,16 @@ const DailyCalendarChart = () => {
             setLoading(true);
             // Fetch data for selected parameter
             const response = await fetch(`http://localhost:3000/api/histanalytics/daily-summary?param=${selectedParam}`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const apiResponse = await response.json();
-            
+
             // Transform data to Nivo calendar format
             const transformedData = transformDailyData(apiResponse.data);
-            
+
             // Update date range based on actual data
             if (transformedData.length > 0) {
                 const dates = transformedData.map(d => d.day).sort();
@@ -85,14 +85,14 @@ const DailyCalendarChart = () => {
                     to: dates[dates.length - 1]
                 });
             }
-            
+
             setData(transformedData);
             setParamUnit(apiResponse.unit || 'µg/m³');
             setError(null);
         } catch (err) {
             console.error('Error fetching daily summary:', err);
             setError('Failed to load daily summary data');
-            
+
             // Fallback to mock data
             const fallbackData = generateFallbackData();
             setData(fallbackData);
@@ -103,7 +103,7 @@ const DailyCalendarChart = () => {
 
     const transformDailyData = (apiData) => {
         if (!apiData || !Array.isArray(apiData)) return [];
-        
+
         return apiData
             .map(item => ({
                 day: item.date,
@@ -118,9 +118,9 @@ const DailyCalendarChart = () => {
             const mStr = m.toString().padStart(2, '0');
             for (let d = 1; d <= 28; d++) {
                 const dStr = d.toString().padStart(2, '0');
-                data.push({ 
-                    day: `2025-${mStr}-${dStr}`, 
-                    value: Math.floor(Math.random() * 200) + 20 
+                data.push({
+                    day: `2025-${mStr}-${dStr}`,
+                    value: Math.floor(Math.random() * 200) + 20
                 });
             }
         }
@@ -134,7 +134,7 @@ const DailyCalendarChart = () => {
 
     // Get current parameter config
     const currentParam = availableParameters.find(p => p.id === selectedParam) || availableParameters[0];
-    
+
     // Get color scale for current parameter
     const currentColorScale = colorScales[selectedParam] || colorScales.pm25;
 
@@ -150,7 +150,7 @@ const DailyCalendarChart = () => {
             <LoadingError type="loading" message="Loading daily calendar..." />
         </div>
     );
-    
+
     if (error) return (
         <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 h-[500px]">
             <LoadingError type="error" message={error} />
@@ -163,14 +163,14 @@ const DailyCalendarChart = () => {
                 <h2 className="text-2xl font-black uppercase tracking-tight border-b-4 border-black pb-2 inline-block w-max" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     DAILY {currentParam.name} HISTORY
                 </h2>
-                
+
                 {/* Parameter Selector Button */}
                 <div className="relative">
-                    <button 
+                    <button
                         onClick={() => setShowParamSelector(!showParamSelector)}
-                        className="bg-black text-white border-4 border-black px-4 py-2 font-bold uppercase flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-none text-sm"
+                        className="bg-white text-black border-4 border-black px-4 py-2 font-black uppercase flex items-center gap-2 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-none text-sm"
                     >
-                        <Settings size={16} /> {currentParam.name}
+                        <Settings size={16} strokeWidth={3} /> {currentParam.name}
                     </button>
 
                     {showParamSelector && (
@@ -181,9 +181,8 @@ const DailyCalendarChart = () => {
                                     <button
                                         key={param.id}
                                         onClick={() => handleParamChange(param.id)}
-                                        className={`flex items-center justify-between p-2 border-2 border-black font-bold hover:bg-gray-100 w-full text-left ${
-                                            selectedParam === param.id ? 'bg-gray-200' : ''
-                                        }`}
+                                        className={`flex items-center justify-between p-2 border-2 border-black font-bold hover:bg-gray-100 w-full text-left ${selectedParam === param.id ? 'bg-gray-200' : ''
+                                            }`}
                                     >
                                         <span style={{ color: param.color }}>{param.name}</span>
                                         <span className="text-xs bg-black text-white px-1">{param.unit}</span>
@@ -194,11 +193,11 @@ const DailyCalendarChart = () => {
                     )}
                 </div>
             </div>
-            
+
             <p className="font-bold mb-6">
                 Year-long footprint of {currentParam.name} levels ({currentParam.unit})
             </p>
-            
+
             <div className="flex-grow overflow-x-auto overflow-y-auto">
                 <div className="w-[1000px] xl:w-full h-[550px]">
                     <ResponsiveCalendar
@@ -287,7 +286,7 @@ const DailyCalendarChart = () => {
                         {formatLocalDate(dateRange.from)} - {formatLocalDate(dateRange.to)}
                     </div>
                 </div>
-                
+
                 {/* Color Gradient Bar */}
                 <div className="w-full h-4 mt-2 relative border-2 border-black">
                     <div className="absolute inset-0" style={{

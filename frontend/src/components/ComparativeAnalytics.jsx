@@ -1,15 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Map, Wind, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import ParameterSelector from './ui/ParameterSelector';
+import { parameterConfig } from './constants/chartConfig';
 
 const ComparativeAnalytics = () => {
     const [metrics, setMetrics] = useState({
-        pm25: null,
-        pm10: null,
-        no2: null,
-        windSpeed: null
+        pm25: null, pm10: null, no2: null, windSpeed: null,
+        co: null, so2: null, o3: null, no: null, nox: null, temperature: null, relativehumidity: null
     });
     const [isLoading, setIsLoading] = useState(true);
+
+    const [selectedParams, setSelectedParams] = useState({
+        pm25: true, pm10: true, no2: true, co: false, so2: false,
+        o3: false, no: false, nox: false, temperature: false, relativehumidity: false
+    });
+    const [showParamSelector, setShowParamSelector] = useState(false);
+
+    const handleParamToggle = (param) => {
+        setSelectedParams(prev => ({ ...prev, [param]: !prev[param] }));
+    };
+
+    const selectAll = () => {
+        const all = Object.keys(selectedParams).reduce((acc, k) => ({ ...acc, [k]: true }), {});
+        setSelectedParams(all);
+    };
+
+    const clearAll = () => {
+        const none = Object.keys(selectedParams).reduce((acc, k) => ({ ...acc, [k]: false }), {});
+        setSelectedParams(none);
+    };
 
     useEffect(() => {
         // Simulate pulling data from a single backend file
@@ -21,17 +41,15 @@ const ComparativeAnalytics = () => {
 
                 // Simulated server response representing Bidhannagar data
                 const mockServerData = {
-                    pm25: 35.4,
-                    pm10: 74.8,
-                    no2: 30.8,
-                    windSpeed: 0.05
+                    pm25: 35.4, pm10: 74.8, no2: 30.8, windSpeed: 0.05,
+                    co: 0.8, so2: 12.5, o3: 45.2, no: 15.3, nox: 46.1, temperature: 28.5, relativehumidity: 65.2
                 };
 
                 setMetrics(mockServerData);
             } catch (error) {
                 console.error("Failed to fetch environment metrics", error);
                 // Fallback data in case of error
-                setMetrics({ pm25: 0, pm10: 0, no2: 0, windSpeed: 0 });
+                setMetrics({ pm25: 0, pm10: 0, no2: 0, windSpeed: 0, co: 0, so2: 0, o3: 0, no: 0, nox: 0, temperature: 0, relativehumidity: 0 });
             } finally {
                 setIsLoading(false);
             }
@@ -174,18 +192,34 @@ const ComparativeAnalytics = () => {
             </div>
 
             {/* 4. Comparison Graph */}
-            <div className="mt-12 bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-0 flex flex-col">
-                <div className="border-b-4 border-black p-4 bg-[#FF00FF] font-black uppercase text-xl flex items-center gap-2">
-                    <Activity className="shrink-0 text-white" /> <span className="text-white">LIVE POLLUTANT LEVELS COMPARISON (µg/m³)</span>
+            <div className="mt-12 bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-0 flex flex-col overflow-visible">
+                <div className="border-b-4 border-black p-4 bg-[#FF00FF] font-black uppercase text-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 text-white">
+                        <Activity className="shrink-0 text-white" /> <span>CUSTOM COMPARISON</span>
+                    </div>
+                    {/* Re-use Parameter Selector Component */}
+                    <div className="w-auto z-10">
+                        <ParameterSelector
+                            selectedParams={selectedParams}
+                            onToggle={handleParamToggle}
+                            onSelectAll={selectAll}
+                            onClearAll={clearAll}
+                            isOpen={showParamSelector}
+                            onToggleOpen={() => setShowParamSelector(!showParamSelector)}
+                        />
+                    </div>
                 </div>
                 <div className="p-8 h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart
-                            data={[
-                                { name: 'PM2.5', value: metrics.pm25, fill: '#FF3366' },
-                                { name: 'NO2', value: metrics.no2, fill: '#FFCC00' },
-                                { name: 'PM10', value: metrics.pm10, fill: '#7B61FF' }
-                            ]}
+                            data={Object.entries(parameterConfig)
+                                .filter(([key]) => selectedParams[key] && key !== 'wind_speed')
+                                .map(([key, config]) => ({
+                                    name: config.name,
+                                    value: metrics[key] || 0,
+                                    fill: config.color,
+                                    unit: config.unit
+                                }))}
                             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                         >
                             <CartesianGrid strokeDasharray="3 3" stroke="#000" vertical={false} />
@@ -194,12 +228,15 @@ const ComparativeAnalytics = () => {
                             <Tooltip
                                 contentStyle={{ backgroundColor: '#00FF66', border: '4px solid black', borderRadius: '0', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', fontWeight: 'bold' }}
                                 cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                                formatter={(value, name, props) => [`${value} ${props.payload.unit}`, name]}
                             />
                             <Bar dataKey="value" stroke="#000" strokeWidth={4} radius={0}>
                                 {
-                                    [{ fill: '#FF3366' }, { fill: '#FFCC00' }, { fill: '#7B61FF' }].map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                                    ))
+                                    Object.entries(parameterConfig)
+                                        .filter(([key]) => selectedParams[key] && key !== 'wind_speed')
+                                        .map(([key, config], index) => (
+                                            <Cell key={`cell-${index}`} fill={config.color} />
+                                        ))
                                 }
                             </Bar>
                         </BarChart>

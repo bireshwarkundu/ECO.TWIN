@@ -12,12 +12,15 @@ const HistoricalDashboard = () => {
             {/* Header Section */}
             <div className="mb-10 border-b-4 border-black pb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight bg-[#FFCC00] px-6 py-2 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] inline-block w-max" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight bg-[#FFCC00] px-6 py-2 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] inline-block w-max relative z-10" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                         HISTORICAL ARCHIVE
                     </h1>
-                    <p className="text-lg md:text-xl font-bold bg-white border-2 border-black px-4 py-2 mt-6 inline-block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        Aggregated urban atmospheric metrics &amp; source tracking.
-                    </p>
+                    <div className="flex bg-white border-4 border-black mt-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] inline-flex">
+                        <div className="w-4 bg-[#FFCC00] border-r-4 border-black flex-shrink-0"></div>
+                        <p className="text-lg md:text-xl font-bold px-6 py-3">
+                            Aggregated urban atmospheric metrics &amp; source tracking.
+                        </p>
+                    </div>
                 </div>
                 <button className="bg-[#00FF66] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-2 active:translate-y-2 active:shadow-none transition-none cursor-pointer" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     <Download size={24} strokeWidth={3} /> EXPORT DATA

@@ -6,6 +6,8 @@ export const parameterConfig = {
     co: { name: 'CO', unit: 'ppm', color: '#FFD700', yAxis: 'left' },
     so2: { name: 'SO2', unit: 'ppb', color: '#00CFFF', yAxis: 'left' },
     o3: { name: 'O3', unit: 'ppb', color: '#FF69B4', yAxis: 'left' },
+    no: { name: 'NO', unit: 'ppb', color: '#B22222', yAxis: 'left' },
+    nox: { name: 'NOx', unit: 'ppb', color: '#FF4500', yAxis: 'left' },
     temperature: { name: 'Temperature', unit: '°C', color: '#00FF66', yAxis: 'right' },
     relativehumidity: { name: 'Humidity', unit: '%', color: '#4169E1', yAxis: 'right' },
     wind_speed: { name: 'Wind Speed', unit: 'm/s', color: '#9370DB', yAxis: 'left' }
@@ -19,6 +21,8 @@ export const defaultSelectedParams = {
     co: false,
     so2: false,
     o3: false,
+    no: false,
+    nox: false,
     temperature: true,
     relativehumidity: false,
     wind_speed: false
