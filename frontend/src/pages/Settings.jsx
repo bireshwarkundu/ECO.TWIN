@@ -1,6 +1,7 @@
 import React from 'react';
 import BrutalistCard from '../components/BrutalistCard';
 import ActionButton from '../components/ActionButton';
+import BackToHomeButton from '../components/BackToHomeButton';
 
 const Settings = () => {
     return (
@@ -31,6 +32,8 @@ const Settings = () => {
                     </ActionButton>
                 </BrutalistCard>
             </div>
+
+            <BackToHomeButton />
         </div>
     );
 };

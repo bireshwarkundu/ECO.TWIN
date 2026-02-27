@@ -6,7 +6,7 @@ import { Settings } from 'lucide-react';
 // Map API day abbreviations to full day names and order them correctly
 const dayOrder = {
     'Mon': 'Monday',
-    'Tue': 'Tuesday', 
+    'Tue': 'Tuesday',
     'Wed': 'Wednesday',
     'Thu': 'Thursday',
     'Fri': 'Friday',
@@ -104,25 +104,25 @@ const CityHeartbeatChart = () => {
             setLoading(true);
             // Using the multi-parameter endpoint
             const response = await fetch(`${import.meta.env.VITE_SERVER1_URL}/api/histanalytics/hourly-patterns`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const apiResponse = await response.json();
             setAllData(apiResponse);
-            
+
             // Initialize with default parameter (pm25)
             updateDataForSelectedParam('pm25', apiResponse);
             setError(null);
         } catch (err) {
             console.error('Error fetching hourly patterns:', err);
             setError('Failed to load hourly patterns data');
-            
+
             // Fallback to mock data if API fails
             const fallbackData = generateFallbackData();
             setData(fallbackData);
-            
+
             const allValues = fallbackData.flatMap(day => day.data.map(h => h.y));
             const min = Math.min(...allValues);
             const max = Math.max(...allValues);
@@ -137,12 +137,12 @@ const CityHeartbeatChart = () => {
 
         // Transform API data to Nivo heatmap format for selected parameter
         const transformedData = transformHourlyDataForParam(dataSource.data, paramId);
-        
+
         // Calculate actual min and max values from the data
         const allValues = transformedData.flatMap(day => day.data.map(h => h.y));
         const min = Math.min(...allValues);
         const max = Math.max(...allValues);
-        
+
         setData(transformedData);
         setValueRange({ min, max });
     };
@@ -150,19 +150,19 @@ const CityHeartbeatChart = () => {
     const transformHourlyDataForParam = (apiData, paramId) => {
         // Group data by day
         const groupedByDay = {};
-        
+
         apiData.forEach(item => {
             const fullDayName = dayOrder[item.day];
             if (!fullDayName) return; // Skip if day mapping not found
-            
+
             if (!groupedByDay[fullDayName]) {
                 groupedByDay[fullDayName] = {};
             }
-            
+
             // Convert hour string to number and format for display
             const hourNum = parseInt(item.hour, 10);
             const hourStr = hourNum.toString().padStart(2, '0') + ':00';
-            
+
             // Get value for selected parameter
             const value = item[paramId];
             if (value !== null && value !== undefined) {
@@ -174,7 +174,7 @@ const CityHeartbeatChart = () => {
         const heatmapData = displayDayOrder.map(day => {
             const dayData = groupedByDay[day] || {};
             const hours = [];
-            
+
             // Create entries for all 24 hours
             for (let i = 0; i < 24; i++) {
                 const hourStr = i.toString().padStart(2, '0') + ':00';
@@ -183,7 +183,7 @@ const CityHeartbeatChart = () => {
                     y: dayData[hourStr] !== undefined ? Math.round(dayData[hourStr] * 100) / 100 : 0
                 });
             }
-            
+
             return {
                 id: day,
                 data: hours
@@ -216,7 +216,7 @@ const CityHeartbeatChart = () => {
 
     // Get current parameter config
     const currentParam = availableParameters.find(p => p.id === selectedParam) || availableParameters[0];
-    
+
     // Get current color scheme
     const currentScheme = colorSchemes[getColorScheme(selectedParam)];
 
@@ -225,7 +225,7 @@ const CityHeartbeatChart = () => {
             <LoadingError type="loading" message="Loading hourly patterns..." />
         </div>
     );
-    
+
     if (error) return (
         <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 h-[500px]">
             <LoadingError type="error" message={error} />
@@ -238,14 +238,14 @@ const CityHeartbeatChart = () => {
                 <h2 className="text-2xl font-black uppercase tracking-tight border-b-4 border-black pb-2 inline-block w-max" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     CITY HEARTBEAT (HOURLY)
                 </h2>
-                
+
                 {/* Parameter Selector Button */}
                 <div className="relative">
-                    <button 
+                    <button
                         onClick={() => setShowParamSelector(!showParamSelector)}
-                        className="bg-black text-white border-4 border-black px-4 py-2 font-bold uppercase flex items-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-none text-sm"
+                        className="bg-white text-black border-4 border-black px-4 py-2 font-black uppercase flex items-center gap-2 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-none text-sm"
                     >
-                        <Settings size={16} /> {currentParam.name}
+                        <Settings size={16} strokeWidth={3} /> {currentParam.name}
                     </button>
 
                     {showParamSelector && (
@@ -256,9 +256,8 @@ const CityHeartbeatChart = () => {
                                     <button
                                         key={param.id}
                                         onClick={() => handleParamChange(param.id)}
-                                        className={`flex items-center justify-between p-2 border-2 border-black font-bold hover:bg-gray-100 w-full text-left ${
-                                            selectedParam === param.id ? 'bg-gray-200' : ''
-                                        }`}
+                                        className={`flex items-center justify-between p-2 border-2 border-black font-bold hover:bg-gray-100 w-full text-left ${selectedParam === param.id ? 'bg-gray-200' : ''
+                                            }`}
                                     >
                                         <span style={{ color: param.color }}>{param.name}</span>
                                         <span className="text-xs bg-black text-white px-1">{param.unit}</span>
@@ -269,11 +268,11 @@ const CityHeartbeatChart = () => {
                     )}
                 </div>
             </div>
-            
+
             <p className="font-bold mb-6">
                 {currentParam.name} concentration by hour and day of week ({currentParam.unit})
             </p>
-            
+
             <div className="flex-grow font-bold focus:outline-none focus:ring-none text-black">
                 <ResponsiveHeatMap
                     data={data}
@@ -298,7 +297,7 @@ const CityHeartbeatChart = () => {
                         legendPosition: 'middle',
                         legendOffset: -80,
                     }}
-                    colors={{ 
+                    colors={{
                         type: 'sequential',
                         scheme: getColorScheme(selectedParam),
                         minValue: valueRange.min,
@@ -314,9 +313,9 @@ const CityHeartbeatChart = () => {
                         fontFamily: 'monospace',
                         fontSize: 10,
                         textColor: '#000000',
-                        axis: { 
+                        axis: {
                             domain: { line: { stroke: '#000000', strokeWidth: 2 } },
-                            ticks: { 
+                            ticks: {
                                 line: { stroke: '#000000', strokeWidth: 2 },
                                 text: { fontWeight: 'bold', fontSize: 10 }
                             }
@@ -327,7 +326,7 @@ const CityHeartbeatChart = () => {
                     }}
                 />
             </div>
-            
+
             {/* Legend with dynamic color gradient based on selected parameter */}
             <div className="mt-4 pt-4 border-t-4 border-black">
                 <div className="flex justify-between items-center text-sm font-bold mb-2">
@@ -349,7 +348,7 @@ const CityHeartbeatChart = () => {
                         {currentParam.name} ({currentParam.unit})
                     </div>
                 </div>
-                
+
                 {/* Dynamic Color Gradient Bar */}
                 <div className="w-full h-6 mt-2 relative border-2 border-black">
                     <div className="absolute inset-0" style={{

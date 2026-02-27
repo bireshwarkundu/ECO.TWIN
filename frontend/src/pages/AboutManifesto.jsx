@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Brain, Settings2 } from 'lucide-react';
+import BackToHomeButton from '../components/BackToHomeButton';
 
 const AboutManifesto = () => {
     const techStack = [
@@ -79,7 +80,7 @@ const AboutManifesto = () => {
                         </div>
                         <div className="p-6 font-mono flex flex-col justify-between flex-grow">
                             <div>
-                                <p className="font-bold text-lg mb-2 text-black"><span className="text-gray-600 mr-2">NAME:</span>[Your Name]</p>
+                                <p className="font-bold text-lg mb-2 text-black"><span className="text-gray-600 mr-2">NAME:</span>Bireshwar Kundu</p>
                                 <p className="font-bold text-lg mb-2 text-black"><span className="text-gray-600 mr-2">ROLE:</span>Full-Stack & AI</p>
                                 <p className="font-bold text-lg mb-4 text-black"><span className="text-gray-600 mr-2">MISSION:</span>Bridging AI and Urban Sustainability.</p>
                             </div>
@@ -101,6 +102,8 @@ const AboutManifesto = () => {
                     <span className="mr-8">✦ REAL-TIME 3D ✦ IOT SENSORS ✦ PREDICTIVE AI ✦ URBAN SANDBOX ✦ BIDHANNAGAR DIGITAL TWIN ✦ OPEN DATA ✦ REAL-TIME 3D ✦ IOT SENSORS ✦ PREDICTIVE AI ✦ URBAN SANDBOX ✦ BIDHANNAGAR DIGITAL TWIN ✦ OPEN DATA ✦</span>
                 </motion.div>
             </div>
+
+            <BackToHomeButton />
         </div>
     );
 };
