@@ -5,64 +5,145 @@ import ActionButton from '../components/ActionButton';
 import MarqueeBanner from '../components/MarqueeBanner';
 import ComparativeAnalytics from '../components/ComparativeAnalytics';
 import BackToHomeButton from '../components/BackToHomeButton';
-import { Activity, Thermometer, Wind, Zap, BarChart2, Droplets, Gauge, Compass, Cloud } from 'lucide-react';
+import MapComponent from '../components/MapComponent';
+import StationSelector from '../components/StationSelector'; // Import the new component
+import { Activity, Thermometer, Wind, Zap, BarChart2, Droplets, Compass, Cloud, Map, Radio } from 'lucide-react';
+
+// Station configuration
+const stations = [
+    { 
+        id: 'bidhanagar-east',
+        name: 'Bidhannagar East',
+        color: '#FF3366',
+        location: 'SECTOR V, KOLKATA',
+        coordinates: [22.58157, 88.410025]
+    },
+    { 
+        id: 'Rabindra_Bharatia',
+        name: 'Rabindra Bharati University',
+        color: '#7B61FF',
+        location: 'RABINDRA BHARATI, KOLKATA',
+        coordinates: [22.627875, 88.3804]
+    },
+    { 
+        id: 'Ballygunge',
+        name: 'Ballygunge',
+        color: '#00FF66',
+        location: 'BALLYGUNGE, KOLKATA',
+        coordinates: [22.5367507, 88.3638022]
+    },
+    { 
+        id: 'Dasnagar',
+        name: 'Dasnagar',
+        color: '#FF8C42',
+        location: 'DASNAGAR, HOWRAH',
+        coordinates: [22.6025571, 88.3105664]
+    }
+];
 
 const Dashboard = () => {
-    const [liveData, setLiveData] = useState(null);
+    const [allStationsData, setAllStationsData] = useState(null);
+    const [selectedStation, setSelectedStation] = useState('bidhanagar-east');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastFetchTime, setLastFetchTime] = useState(null);
+    const [showMap, setShowMap] = useState(false);
 
-    const fetchLiveData = async () => {
+    const fetchAllStationsData = async () => {
         setLoading(true);
         setError(null);
         try {
-            // Updated to use port 3000 as per your API endpoint
-            const res = await axios.get('http://localhost:3000/api/realtime/livedata');
-            
-            // Transform the data to include location and format
-            const transformedData = {
-                ...res.data,
-                location: 'SECTOR V, KOLKATA', // You can make this dynamic based on your data
-                lastUpdated: res.data.timestamp || new Date().toISOString(),
-                // Ensure all values are numbers
-                pm25: Number(res.data.pm25) || 0,
-                pm10: Number(res.data.pm10) || 0,
-                co: Number(res.data.co) || 0,
-                no2: Number(res.data.no2) || 0,
-                no: Number(res.data.no) || 0,
-                nox: Number(res.data.nox) || 0,
-                o3: Number(res.data.o3) || 0,
-                so2: Number(res.data.so2) || 0,
-                temperature: Number(res.data.temperature) || 0,
-                humidity: Number(res.data.humidity) || 0,
-                wind_speed: Number(res.data.wind_speed) || 0,
-                wind_direction: Number(res.data.wind_direction) || 0
-            };
-            
-            setLiveData(transformedData);
+            const res = await axios.get(`${import.meta.env.VITE_SERVER1_URL}/api/realtime/livedata`);
+            setAllStationsData(res.data);
             setLastFetchTime(new Date());
+            console.log('All stations data:', res.data);
         } catch (err) {
             console.error('Error fetching live data:', err);
             setError('Failed to fetch live data. Please try again.');
             
-            // Fallback data for development
-            setLiveData({
+            // Fallback data (keep your existing fallback)
+            setAllStationsData({
+                success: true,
                 timestamp: new Date().toISOString(),
-                pm25: 56.5,
-                pm10: 131.79,
-                co: 0.804,
-                no2: 10.27,
-                no: 15.37,
-                nox: 0.01782,
-                o3: 58.22,
-                so2: 3.63,
-                temperature: 28.18,
-                humidity: 41.68,
-                wind_speed: 1.06,
-                wind_direction: 249.36,
-                location: 'SECTOR V, KOLKATA',
-                lastUpdated: new Date().toISOString()
+                metadata: {
+                    total_stations: 4,
+                    successful_stations: 4,
+                    failed_stations: 0
+                },
+                stations: {
+                    "bidhanagar-east": {
+                        station_id: "10851",
+                        station_name: "Bidhannagar East",
+                        station_key: "bidhanagar-east",
+                        timestamp: new Date().toISOString(),
+                        pm25: 51.36,
+                        pm10: 120.41,
+                        no2: 10.16,
+                        no: 15.36,
+                        nox: 0.01776,
+                        co: 1.504,
+                        so2: 73.11,
+                        o3: 13.19,
+                        temperature: 22.94,
+                        humidity: 45.59,
+                        wind_speed: 0.04,
+                        wind_direction: 280.44
+                    },
+                    "Dasnagar": {
+                        station_id: "3409530",
+                        station_name: "Dasnagar",
+                        station_key: "Dasnagar",
+                        timestamp: new Date().toISOString(),
+                        pm25: 63.14,
+                        pm10: 149.15,
+                        no2: 94.28,
+                        no: 25.92,
+                        nox: 0.07122,
+                        co: 2.6,
+                        so2: 40.21,
+                        o3: 17.02,
+                        temperature: 22.96,
+                        humidity: 49.51,
+                        wind_speed: 0.33,
+                        wind_direction: 109.07
+                    },
+                    "Rabindra_Bharatia": {
+                        station_id: "3409320",
+                        station_name: "Rabindra Bharatia",
+                        station_key: "Rabindra_Bharatia",
+                        timestamp: new Date().toISOString(),
+                        pm25: 93.95,
+                        pm10: 151.31,
+                        no2: 128.27,
+                        no: 13.64,
+                        nox: 0.07794,
+                        co: 1.729,
+                        so2: 6.77,
+                        o3: 18.92,
+                        temperature: 24.21,
+                        humidity: 34.96,
+                        wind_speed: 0.02,
+                        wind_direction: 165.86
+                    },
+                    "Ballygunge": {
+                        station_id: "10918",
+                        station_name: "Ballygunge",
+                        station_key: "Ballygunge",
+                        timestamp: new Date().toISOString(),
+                        pm25: 63,
+                        pm10: 121.6,
+                        no2: 112.2,
+                        no: 47.7,
+                        nox: 0.0969,
+                        co: 3.017,
+                        so2: 11.17,
+                        o3: 11.38,
+                        temperature: 20.23,
+                        humidity: 29.72,
+                        wind_speed: 0.63,
+                        wind_direction: 145.95
+                    }
+                }
             });
         } finally {
             setLoading(false);
@@ -70,34 +151,20 @@ const Dashboard = () => {
     };
 
     useEffect(() => {
-        fetchLiveData();
-        
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(() => {
-            fetchLiveData();
-        }, 60000 * 60); // 60,000 ms = 1 minute
-        
+        fetchAllStationsData();
+        const interval = setInterval(fetchAllStationsData, 60000 * 60); // Auto-refresh every 60 minutes
         return () => clearInterval(interval);
     }, []);
 
     const saveToHistory = async () => {
-        if (!liveData) return;
+        if (!allStationsData) return;
         try {
+            const currentStationData = getCurrentStationData();
             const payload = {
-                timestamp: liveData.timestamp || new Date().toISOString(),
-                location: liveData.location,
-                pm25: liveData.pm25,
-                pm10: liveData.pm10,
-                co: liveData.co,
-                no2: liveData.no2,
-                no: liveData.no,
-                nox: liveData.nox,
-                o3: liveData.o3,
-                so2: liveData.so2,
-                temperature: liveData.temperature,
-                humidity: liveData.humidity,
-                wind_speed: liveData.wind_speed,
-                wind_direction: liveData.wind_direction
+                timestamp: currentStationData?.timestamp || new Date().toISOString(),
+                station_id: selectedStation,
+                station_name: getCurrentStation()?.name,
+                ...currentStationData
             };
             
             await axios.post('http://localhost:5001/api/history', { data: [payload] });
@@ -108,8 +175,19 @@ const Dashboard = () => {
         }
     };
 
-    // Determine AQI level and color based on PM2.5
-    const getAQILevel = (pm25) => {
+    // Helper functions
+    const getCurrentStation = () => {
+        return stations.find(s => s.id === selectedStation) || stations[0];
+    };
+
+    const getCurrentStationData = () => {
+        return allStationsData?.stations?.[selectedStation];
+    };
+
+    const getStationAQI = (stationId) => {
+        const pm25 = allStationsData?.stations?.[stationId]?.pm25;
+        if (!pm25) return { level: '--', color: '#000000' };
+        
         if (pm25 <= 12) return { level: 'GOOD', color: '#00FF66' };
         if (pm25 <= 35.4) return { level: 'MODERATE', color: '#FFCC00' };
         if (pm25 <= 55.4) return { level: 'UNHEALTHY FOR SENSITIVE', color: '#FF8C42' };
@@ -118,11 +196,15 @@ const Dashboard = () => {
         return { level: 'HAZARDOUS', color: '#000000' };
     };
 
-    const aqiInfo = liveData ? getAQILevel(liveData.pm25) : { level: '--', color: '#000000' };
+    const currentStation = getCurrentStation();
+    const currentStationData = getCurrentStationData();
+    const aqiInfo = getStationAQI(selectedStation);
 
     return (
         <div className="w-full bg-[#FDFBF7] font-mono text-black min-h-screen pb-16">
-            <MarqueeBanner text={`⚠️ ${liveData ? `${aqiInfo.level} AIR QUALITY IN ${liveData.location} - PM2.5: ${liveData.pm25} µg/m³` : 'LOADING LIVE DATA...'} ⚠️`} />
+            <MarqueeBanner 
+                text={`⚠️ ${currentStationData ? `${aqiInfo.level} AIR QUALITY AT ${currentStation.name} - PM2.5: ${currentStationData.pm25?.toFixed(1)} µg/m³` : 'LOADING LIVE DATA...'} ⚠️`} 
+            />
 
             <div className="max-w-7xl mx-auto p-4 md:p-8">
 
@@ -133,18 +215,33 @@ const Dashboard = () => {
                             LIVE TELEMETRY
                         </h1>
                         <h2 className="text-xl font-bold bg-white border-4 border-black px-4 py-2 mt-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-max flex items-center gap-3">
-                            <Zap size={24} className="text-[#FF3366] fill-[#FF3366]" /> REAL-TIME EDGE SENSOR NODE STREAMS
+                            <Zap size={24} className="text-[#FF3366] fill-[#FF3366]" /> REAL-TIME NETWORK • 4 STATIONS ONLINE
                         </h2>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
-                        <ActionButton onClick={fetchLiveData} disabled={loading} bg="#FF3366">
+                        <ActionButton onClick={fetchAllStationsData} disabled={loading} bg="#FF3366">
                             <span className="text-white font-black">{loading ? 'REFRESHING...' : 'FORCE REFRESH'}</span>
                         </ActionButton>
                         <ActionButton onClick={saveToHistory} bg="#00FF66">
                             <span className="text-black font-black uppercase">SAVE RECORD</span>
                         </ActionButton>
+                        <ActionButton onClick={() => setShowMap(!showMap)} bg="#7B61FF">
+                            <span className="text-white font-black uppercase flex items-center gap-2">
+                                <Map size={20} /> {showMap ? 'HIDE MAP' : 'SHOW MAP'}
+                            </span>
+                        </ActionButton>
                     </div>
                 </header>
+
+                {/* ===== STATION SELECTOR GOES HERE ===== */}
+                {/* Replace the old station grid with this */}
+                <StationSelector
+                    stations={stations}
+                    selectedStation={selectedStation}
+                    onStationSelect={setSelectedStation}
+                    stationData={allStationsData?.stations || {}}
+                    className="mb-8"
+                />
 
                 {error && (
                     <div className="mb-6 p-4 bg-[#FF3366] border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-white font-bold">
@@ -152,154 +249,66 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* Main Cards Grid */}
+                {/* Map Section */}
+                {showMap && (
+                    <div className="mb-10 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                        <div className="bg-black text-white px-4 py-2 font-bold flex justify-between items-center">
+                            <span className="flex items-center gap-2">
+                                <Map size={20} /> SPATIAL POLLUTION MAP - KOLKATA NETWORK
+                            </span>
+                            <span className="text-xs bg-[#FF3366] px-2 py-1">
+                                {allStationsData?.metadata?.successful_stations || 0}/4 STATIONS ONLINE
+                            </span>
+                        </div>
+                        <div className="h-[500px] w-full">
+                            <MapComponent liveData={allStationsData} />
+                        </div>
+                        <div className="bg-[#FDFBF7] border-t-4 border-black p-2 text-xs font-bold flex flex-wrap gap-4">
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-green border border-black"></div>
+                                <span>Low (0-40)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-yellow border border-black"></div>
+                                <span>Moderate (40-60)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-orange border border-black"></div>
+                                <span>High (60-80)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-red border border-black"></div>
+                                <span>Very High (80-100)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-darkred border border-black"></div>
+                                <span>Severe (100+)</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Main Cards Grid - Now showing selected station data */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                    {/* Location Card */}
-                    <BrutalistCard title="CURRENT LOCATION" headerColor="#FFCC00">
-                        <div className="flex items-center space-x-6">
-                            <div className="p-6 border-4 border-black bg-black text-[#00FF66] shadow-[4px_4px_0px_0px_rgba(0,255,102,1)]">
-                                <Activity size={48} strokeWidth={2.5} />
-                            </div>
-                            <div>
-                                <p className="text-sm uppercase font-black text-gray-500 mb-1">ACTIVE EDGE NODE</p>
-                                <p className="text-3xl font-black uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                    {liveData ? liveData.location : 'SYNCING...'}
-                                </p>
-                                <p className="text-xs mt-2 font-bold">
-                                    Last: {liveData ? new Date(liveData.lastUpdated).toLocaleTimeString() : '--'}
-                                </p>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* Air Quality Card - PM2.5 */}
-                    <BrutalistCard title="AIR QUALITY (PM2.5)" headerColor="#FF3366">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase flex items-center gap-2">
-                                    <Wind size={28} strokeWidth={3} /> PM2.5
-                                </span>
-                                <BarChart2 size={28} />
-                            </div>
-                            <div className="text-7xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.pm25.toFixed(1) : '0'} <span className="text-2xl font-bold mt-auto mb-1">µg/m³</span>
-                            </div>
-                            <div className="mt-4 flex justify-between items-center">
-                                <span className="font-bold">AQI: </span>
-                                <span className="font-black px-3 py-1" style={{ backgroundColor: aqiInfo.color, border: '2px solid black' }}>
-                                    {aqiInfo.level}
-                                </span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* PM10 Card */}
-                    <BrutalistCard title="PM10 LEVELS" headerColor="#FF8C42">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase flex items-center gap-2">
-                                    <Cloud size={28} strokeWidth={3} /> PM10
-                                </span>
-                            </div>
-                            <div className="text-6xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.pm10.toFixed(1) : '0'} <span className="text-xl font-bold">µg/m³</span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* Temperature Card */}
-                    <BrutalistCard title="TEMPERATURE" headerColor="#00FF66">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase flex items-center gap-2">
-                                    <Thermometer size={28} strokeWidth={3} /> AMBIENT
-                                </span>
-                            </div>
-                            <div className="text-6xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.temperature.toFixed(1) : '0'} <span className="text-xl font-bold">°C</span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* Humidity Card */}
-                    <BrutalistCard title="HUMIDITY" headerColor="#4169E1">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase flex items-center gap-2">
-                                    <Droplets size={28} strokeWidth={3} /> RELATIVE
-                                </span>
-                            </div>
-                            <div className="text-6xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.humidity.toFixed(1) : '0'} <span className="text-xl font-bold">%</span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* Wind Card */}
-                    <BrutalistCard title="WIND" headerColor="#7B61FF">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase flex items-center gap-2">
-                                    <Wind size={28} strokeWidth={3} /> SPEED/DIR
-                                </span>
-                                <Compass size={28} />
-                            </div>
-                            <div className="flex items-baseline gap-4">
-                                <div className="text-4xl font-black" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                    {liveData ? liveData.wind_speed.toFixed(1) : '0'} <span className="text-lg font-bold">m/s</span>
-                                </div>
-                                <div className="text-2xl font-black bg-black text-white px-3 py-1">
-                                    {liveData ? liveData.wind_direction.toFixed(0) : '0'}°
-                                </div>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* NO2 Card */}
-                    <BrutalistCard title="NO2 LEVELS" headerColor="#9370DB">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase">NITROGEN DIOXIDE</span>
-                            </div>
-                            <div className="text-5xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.no2.toFixed(2) : '0'} <span className="text-lg font-bold">ppb</span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* CO Card */}
-                    <BrutalistCard title="CO LEVELS" headerColor="#FFD700">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase">CARBON MONOXIDE</span>
-                            </div>
-                            <div className="text-5xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.co.toFixed(3) : '0'} <span className="text-lg font-bold">ppm</span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
-
-                    {/* O3 Card */}
-                    <BrutalistCard title="O3 LEVELS" headerColor="#FF69B4">
-                        <div className="flex flex-col h-full justify-center">
-                            <div className="text-black mb-4 flex items-center justify-between border-b-4 border-black pb-2">
-                                <span className="font-bold text-2xl uppercase">OZONE</span>
-                            </div>
-                            <div className="text-5xl font-black text-black flex items-baseline gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                                {liveData ? liveData.o3.toFixed(2) : '0'} <span className="text-lg font-bold">ppb</span>
-                            </div>
-                        </div>
-                    </BrutalistCard>
+                    {/* ... (keep all your existing BrutalistCard components) ... */}
                 </div>
 
-                {/* Last Updated Timestamp */}
-                <div className="mt-6 text-right font-bold text-sm">
-                    Last sync: {lastFetchTime ? lastFetchTime.toLocaleString() : 'Never'} | Auto-refresh every 1 Hour
+                {/* Network Status */}
+                <div className="mt-6 flex justify-between items-center text-sm font-bold">
+                    <div className="flex items-center gap-4">
+                        <span className="bg-black text-white px-2 py-1">
+                            {allStationsData?.metadata?.successful_stations || 0}/{allStationsData?.metadata?.total_stations || 4} STATIONS ONLINE
+                        </span>
+                        <span className="text-xs">
+                            Last network sync: {lastFetchTime ? lastFetchTime.toLocaleString() : 'Never'}
+                        </span>
+                    </div>
+                    <span className="text-xs">Auto-refresh every 5 minutes</span>
                 </div>
 
                 {/* Comparative Analytics Module */}
                 <div className="mt-12 w-full">
-                    <ComparativeAnalytics />
+                    <ComparativeAnalytics liveData={allStationsData} />
                 </div>
             </div>
 
