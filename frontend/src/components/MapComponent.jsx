@@ -26,18 +26,8 @@ const fixLeafletIcons = () => {
 fixLeafletIcons();
 
 // ---------------------------
-// 1️⃣ Simulation Area
+// 1️⃣ Define Bounding Box based on station coordinates
 // ---------------------------
-const southWest = [22.5, 88.3];
-const northEast = [22.65, 88.5];
-
-const rows = 20;
-const cols = 20;
-
-const latStep = (northEast[0] - southWest[0]) / rows;
-const lngStep = (northEast[1] - southWest[1]) / cols;
-
-// Station coordinates with proper names
 const stations = [
   { 
     id: 'bidhanagar-east',
@@ -65,6 +55,37 @@ const stations = [
   }
 ];
 
+// Calculate bounding box from stations with 10% padding
+const calculateBounds = () => {
+  const lats = stations.map(s => s.position[0]);
+  const lngs = stations.map(s => s.position[1]);
+  
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  
+  // Add 10% padding
+  const latPadding = (maxLat - minLat) * 0.1;
+  const lngPadding = (maxLng - minLng) * 0.1;
+  
+  return {
+    southWest: [minLat - latPadding, minLng - lngPadding],
+    northEast: [maxLat + latPadding, maxLng + lngPadding]
+  };
+};
+
+const bounds = calculateBounds();
+const southWest = bounds.southWest;
+const northEast = bounds.northEast;
+
+// Grid resolution: 50x50 for smoother interpolation
+const rows = 50;
+const cols = 50;
+
+const latStep = (northEast[0] - southWest[0]) / rows;
+const lngStep = (northEast[1] - southWest[1]) / cols;
+
 // Sample traffic hotspots
 const trafficHotspots = [
   { pos: [22.575, 88.43], name: "City Center", intensity: "high" },
@@ -86,7 +107,7 @@ const hospitals = [
   { pos: [22.577, 88.435], name: "Apollo Clinic", beds: 200 },
 ];
 
-// All available pollutants
+// All available pollutants with enhanced color scales
 const pollutants = [
   { id: 'pm25', name: 'PM2.5', unit: 'µg/m³', baseColor: '#FF3366' },
   { id: 'pm10', name: 'PM10', unit: 'µg/m³', baseColor: '#FF8C42' },
@@ -111,78 +132,90 @@ const getDistance = (lat1, lng1, lat2, lng2) => {
   );
 };
 
+// Enhanced color scale with proper severe/hazardous colors
 const getColor = (value, pollutant = 'pm25') => {
   // Different color scales for different pollutants
   const scales = {
     pm25: [
-      { threshold: 100, color: "#8B0000" },
-      { threshold: 80, color: "#FF0000" },
-      { threshold: 60, color: "#FFA500" },
-      { threshold: 40, color: "#FFFF00" },
-      { threshold: 0, color: "#008000" }
+      { threshold: 300, color: "#4B0082" }, // Indigo - Hazardous
+      { threshold: 250, color: "#8B0000" }, // Dark Red - Very Unhealthy
+      { threshold: 150, color: "#FF0000" }, // Red - Unhealthy
+      { threshold: 100, color: "#FFA500" }, // Orange - Unhealthy for Sensitive
+      { threshold: 50, color: "#FFFF00" },  // Yellow - Moderate
+      { threshold: 0, color: "#00FF66" }    // Green - Good
     ],
     pm10: [
-      { threshold: 150, color: "#8B0000" },
-      { threshold: 100, color: "#FF0000" },
-      { threshold: 75, color: "#FFA500" },
-      { threshold: 50, color: "#FFFF00" },
-      { threshold: 0, color: "#008000" }
+      { threshold: 420, color: "#4B0082" }, // Hazardous
+      { threshold: 350, color: "#8B0000" }, // Very Unhealthy
+      { threshold: 250, color: "#FF0000" }, // Unhealthy
+      { threshold: 150, color: "#FFA500" }, // Unhealthy for Sensitive
+      { threshold: 100, color: "#FFFF00" }, // Moderate
+      { threshold: 0, color: "#00FF66" }    // Good
     ],
     no2: [
-      { threshold: 60, color: "#8B0000" },
-      { threshold: 40, color: "#FF0000" },
-      { threshold: 30, color: "#FFA500" },
-      { threshold: 20, color: "#FFFF00" },
-      { threshold: 0, color: "#90EE90" }
+      { threshold: 200, color: "#4B0082" }, // Hazardous
+      { threshold: 150, color: "#8B0000" }, // Very Unhealthy
+      { threshold: 100, color: "#FF0000" }, // Unhealthy
+      { threshold: 60, color: "#FFA500" },  // Unhealthy for Sensitive
+      { threshold: 30, color: "#FFFF00" },  // Moderate
+      { threshold: 0, color: "#90EE90" }    // Good
     ],
     co: [
-      { threshold: 10, color: "#8B0000" },
-      { threshold: 7, color: "#FF0000" },
-      { threshold: 4, color: "#FFA500" },
-      { threshold: 2, color: "#FFFF00" },
-      { threshold: 0, color: "#90EE90" }
+      { threshold: 30, color: "#4B0082" },  // Hazardous
+      { threshold: 20, color: "#8B0000" },  // Very Unhealthy
+      { threshold: 15, color: "#FF0000" },  // Unhealthy
+      { threshold: 10, color: "#FFA500" },  // Unhealthy for Sensitive
+      { threshold: 5, color: "#FFFF00" },   // Moderate
+      { threshold: 0, color: "#90EE90" }    // Good
     ],
     so2: [
-      { threshold: 80, color: "#8B0000" },
-      { threshold: 60, color: "#FF0000" },
-      { threshold: 40, color: "#FFA500" },
-      { threshold: 20, color: "#FFFF00" },
-      { threshold: 0, color: "#ADD8E6" }
+      { threshold: 300, color: "#4B0082" }, // Hazardous
+      { threshold: 200, color: "#8B0000" }, // Very Unhealthy
+      { threshold: 150, color: "#FF0000" }, // Unhealthy
+      { threshold: 80, color: "#FFA500" },  // Unhealthy for Sensitive
+      { threshold: 40, color: "#FFFF00" },  // Moderate
+      { threshold: 0, color: "#ADD8E6" }    // Good
     ],
     o3: [
-      { threshold: 70, color: "#800080" },
-      { threshold: 55, color: "#FF0000" },
-      { threshold: 40, color: "#FFA500" },
-      { threshold: 25, color: "#FFFF00" },
-      { threshold: 0, color: "#ADD8E6" }
+      { threshold: 250, color: "#4B0082" }, // Hazardous
+      { threshold: 200, color: "#8B0000" }, // Very Unhealthy
+      { threshold: 150, color: "#FF0000" }, // Unhealthy
+      { threshold: 100, color: "#FFA500" }, // Unhealthy for Sensitive
+      { threshold: 50, color: "#FFFF00" },  // Moderate
+      { threshold: 0, color: "#ADD8E6" }    // Good
     ],
     no: [
-      { threshold: 60, color: "#8B0000" },
-      { threshold: 40, color: "#FF0000" },
-      { threshold: 30, color: "#FFA500" },
-      { threshold: 20, color: "#FFFF00" },
-      { threshold: 0, color: "#DDA0DD" }
+      { threshold: 200, color: "#4B0082" }, // Hazardous
+      { threshold: 150, color: "#8B0000" }, // Very Unhealthy
+      { threshold: 100, color: "#FF0000" }, // Unhealthy
+      { threshold: 60, color: "#FFA500" },  // Unhealthy for Sensitive
+      { threshold: 30, color: "#FFFF00" },  // Moderate
+      { threshold: 0, color: "#DDA0DD" }    // Good
     ],
     nox: [
-      { threshold: 80, color: "#8B0000" },
-      { threshold: 60, color: "#FF0000" },
-      { threshold: 40, color: "#FFA500" },
-      { threshold: 20, color: "#FFFF00" },
-      { threshold: 0, color: "#C0C0C0" }
+      { threshold: 250, color: "#4B0082" }, // Hazardous
+      { threshold: 200, color: "#8B0000" }, // Very Unhealthy
+      { threshold: 150, color: "#FF0000" }, // Unhealthy
+      { threshold: 80, color: "#FFA500" },  // Unhealthy for Sensitive
+      { threshold: 40, color: "#FFFF00" },  // Moderate
+      { threshold: 0, color: "#C0C0C0" }    // Good
     ],
     temperature: [
-      { threshold: 40, color: "#8B0000" },
-      { threshold: 35, color: "#FF0000" },
-      { threshold: 30, color: "#FFA500" },
-      { threshold: 25, color: "#FFFF00" },
-      { threshold: 0, color: "#00FF66" }
+      { threshold: 45, color: "#8B0000" },  // Extreme Heat
+      { threshold: 40, color: "#FF0000" },  // Very Hot
+      { threshold: 35, color: "#FFA500" },  // Hot
+      { threshold: 30, color: "#FFFF00" },  // Warm
+      { threshold: 20, color: "#00FF66" },  // Pleasant
+      { threshold: 10, color: "#4169E1" },  // Cool
+      { threshold: 0, color: "#00008B" }    // Cold
     ],
     humidity: [
-      { threshold: 90, color: "#00008B" },
-      { threshold: 70, color: "#4169E1" },
-      { threshold: 50, color: "#87CEEB" },
-      { threshold: 30, color: "#ADD8E6" },
-      { threshold: 0, color: "#F0F8FF" }
+      { threshold: 90, color: "#00008B" },  // Very Humid
+      { threshold: 80, color: "#4169E1" },  // Humid
+      { threshold: 70, color: "#87CEEB" },  // Moderate Humid
+      { threshold: 50, color: "#ADD8E6" },  // Comfortable
+      { threshold: 30, color: "#F0F8FF" },  // Dry
+      { threshold: 0, color: "#FFFFFF" }    // Very Dry
     ]
   };
   
@@ -190,59 +223,60 @@ const getColor = (value, pollutant = 'pm25') => {
   for (let level of scale) {
     if (value > level.threshold) return level.color;
   }
-  return "#008000";
+  return scale[scale.length - 1].color; // Return the lowest threshold color
 };
 
-// Time-based scaling
-const getTimeFactor = (hour) => {
-  if (hour >= 7 && hour <= 10) return 1.6;   // Morning rush
-  if (hour >= 17 && hour <= 20) return 1.7;  // Evening rush
-  if (hour >= 0 && hour <= 5) return 0.6;    // Night
-  return 1.0;                                // Normal
-};
-
-// Land use factors (different areas have different pollution levels)
-const getLandUseFactor = (i, j) => {
-  // Industrial area (higher pollution)
-  if (i > 15 && j > 15) return 1.8;
-  // Traffic corridor (middle band)
-  if (i > 8 && i < 12 && j > 5 && j < 15) return 1.5;
-  // Park / low emission zone
-  if (i < 5 && j < 5) return 0.6;
-  // Residential
-  return 0.9;
-};
-
-// Inverse distance weighting interpolation using multiple stations
-const interpolateValue = (lat, lng, stationData, pollutant) => {
+// ---------------------------
+// 3️⃣ INDUSTRY STANDARD IDW INTERPOLATION
+// Formula: V = Σ(vi / di^p) / Σ(1 / di^p)
+// where p = 2 (standard power parameter)
+// ---------------------------
+const idwInterpolate = (lat, lng, stationData, pollutant, power = 2) => {
   let weightedSum = 0;
   let weightSum = 0;
+  let validStations = 0;
   
   stations.forEach(station => {
     const stationInfo = stationData?.stations?.[station.id];
     if (!stationInfo || stationInfo[pollutant] === null || stationInfo[pollutant] === undefined) return;
     
     const distance = getDistance(lat, lng, station.position[0], station.position[1]);
-    // Avoid division by zero
-    if (distance < 0.001) return stationInfo[pollutant]; // Very close to station
+    validStations++;
     
-    // Inverse distance weighting (power of 2 for smoother falloff)
-    const weight = 1 / Math.pow(distance, 2);
+    // If we're exactly at a station, return its exact value
+    if (distance < 0.0001) {
+      return stationInfo[pollutant];
+    }
+    
+    // IDW formula: weight = 1 / distance^p
+    const weight = 1 / Math.pow(distance, power);
     weightedSum += stationInfo[pollutant] * weight;
     weightSum += weight;
   });
   
-  if (weightSum === 0) return null;
-  return weightedSum / weightSum;
+  // If no valid stations, return null
+  if (validStations === 0) return null;
+  
+  // If only one valid station, return its value (no interpolation needed)
+  if (validStations === 1) {
+    const singleStation = stations.find(s => 
+      stationData?.stations?.[s.id]?.[pollutant] !== null && 
+      stationData?.stations?.[s.id]?.[pollutant] !== undefined
+    );
+    return stationData?.stations?.[singleStation?.id]?.[pollutant] || null;
+  }
+  
+  // Return interpolated value
+  return weightSum > 0 ? weightedSum / weightSum : null;
 };
 
 // ---------------------------
-// 3️⃣ Grid Simulation Logic with MULTI-STATION data
+// 4️⃣ Grid Generation with IDW interpolation (NO TIME FACTOR)
 // ---------------------------
-const generateGrid = (timeFactor, pollutant, stationData) => {
+const generateGrid = (pollutant, stationData) => {
   const cells = [];
   
-  // Check if we have any valid station data
+  // Get valid station data
   const hasValidData = stationData?.stations && 
     Object.values(stationData.stations).some(s => s && s[pollutant] !== null && s[pollutant] !== undefined);
 
@@ -259,31 +293,32 @@ const generateGrid = (timeFactor, pollutant, stationData) => {
       let pollutionValue;
       
       if (hasValidData) {
-        // Use interpolation from multiple stations
-        const interpolated = interpolateValue(centerLat, centerLng, stationData, pollutant);
-        pollutionValue = interpolated !== null ? interpolated : 50; // Fallback
+        // Use IDW interpolation with power=2 (standard) - NO TIME FACTOR
+        pollutionValue = idwInterpolate(centerLat, centerLng, stationData, pollutant, 2);
       } else {
-        // Fallback to single station simulation
+        // Fallback to simulated data if no station data
         const baseValue = 50;
-        const distanceToFirstStation = getDistance(centerLat, centerLng, stations[0].position[0], stations[0].position[1]);
+        const distanceToCenter = getDistance(centerLat, centerLng, 22.5828, 88.4172);
         const maxDistance = getDistance(southWest[0], southWest[1], northEast[0], northEast[1]);
-        const normalizedDistance = distanceToFirstStation / maxDistance;
+        const normalizedDistance = distanceToCenter / maxDistance;
         const distanceFactor = Math.exp(-2 * Math.pow(normalizedDistance, 2)) * 1.2 + 0.3;
-        const landUseFactor = getLandUseFactor(i, j);
         const randomFactor = 0.9 + Math.random() * 0.2;
-        pollutionValue = baseValue * timeFactor * distanceFactor * landUseFactor * randomFactor;
+        pollutionValue = baseValue * distanceFactor * randomFactor;
       }
 
-      cells.push({
-        positions: [
-          [lat1, lng1],
-          [lat1, lng2],
-          [lat2, lng2],
-          [lat2, lng1],
-        ],
-        value: Math.max(0, pollutionValue),
-        center: [centerLat, centerLng]
-      });
+      // Only add cell if we have a valid value
+      if (pollutionValue !== null) {
+        cells.push({
+          positions: [
+            [lat1, lng1],
+            [lat1, lng2],
+            [lat2, lng2],
+            [lat2, lng1],
+          ],
+          value: Math.max(0, pollutionValue),
+          center: [centerLat, centerLng]
+        });
+      }
     }
   }
 
@@ -291,7 +326,7 @@ const generateGrid = (timeFactor, pollutant, stationData) => {
 };
 
 // Generate isopleth contours (simplified)
-const generateContours = (grid, levels = [40, 60, 80, 100]) => {
+const generateContours = (grid, levels = [50, 100, 150, 200, 250, 300]) => {
   return levels.map(level => ({
     level,
     bounds: [southWest, northEast]
@@ -328,10 +363,9 @@ const createStationIcon = (color) => {
 };
 
 // ---------------------------
-// 4️⃣ Main Component
+// 5️⃣ Main Component
 // ---------------------------
 function MapComponent({ liveData }) {
-  const [hour, setHour] = useState(new Date().getHours());
   const [selectedPollutant, setSelectedPollutant] = useState('pm25');
   const [showTraffic, setShowTraffic] = useState(true);
   const [showSensitive, setShowSensitive] = useState(true);
@@ -340,21 +374,19 @@ function MapComponent({ liveData }) {
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [selectedStation, setSelectedStation] = useState(null);
 
-  const timeFactor = getTimeFactor(hour);
-  
-  // Generate grid using data from all stations
+  // Generate grid using IDW interpolation (NO TIME FACTOR)
   const grid = useMemo(() => 
-    generateGrid(timeFactor, selectedPollutant, liveData), 
-    [timeFactor, selectedPollutant, liveData]
+    generateGrid(selectedPollutant, liveData), 
+    [selectedPollutant, liveData]
   );
 
   console.log('Station Data:', liveData);
   console.log('Grid Stats:', {
     pollutant: selectedPollutant,
     cells: grid.length,
-    min: Math.min(...grid.map(c => c.value)).toFixed(2),
-    max: Math.max(...grid.map(c => c.value)).toFixed(2),
-    avg: (grid.reduce((a, c) => a + c.value, 0) / grid.length).toFixed(2)
+    min: grid.length > 0 ? Math.min(...grid.map(c => c.value)).toFixed(2) : 'N/A',
+    max: grid.length > 0 ? Math.max(...grid.map(c => c.value)).toFixed(2) : 'N/A',
+    avg: grid.length > 0 ? (grid.reduce((a, c) => a + c.value, 0) / grid.length).toFixed(2) : 'N/A'
   });
   
   // Calculate statistics
@@ -393,6 +425,8 @@ function MapComponent({ liveData }) {
       .map(s => s?.wind_direction)
       .filter(v => v !== null && v !== undefined);
     if (directions.length === 0) return 249.36;
+    
+    // Average of circular data (simplified)
     return directions.reduce((a, b) => a + b, 0) / directions.length;
   }, [liveData]);
 
@@ -426,11 +460,40 @@ function MapComponent({ liveData }) {
 
   const windArrow = createWindArrow();
 
+  // Calculate map center based on bounds
+  const mapCenter = [
+    (southWest[0] + northEast[0]) / 2,
+    (southWest[1] + northEast[1]) / 2
+  ];
+
+  // Get color scale items for legend
+  const getLegendItems = () => {
+    const scale = {
+      pm25: [
+        { color: "#4B0082", label: "Hazardous (250+)" },
+        { color: "#8B0000", label: "Very Unhealthy (150-250)" },
+        { color: "#FF0000", label: "Unhealthy (100-150)" },
+        { color: "#FFA500", label: "Unhealthy Sens (50-100)" },
+        { color: "#FFFF00", label: "Moderate (12-50)" },
+        { color: "#00FF66", label: "Good (0-12)" }
+      ],
+      pm10: [
+        { color: "#4B0082", label: "Hazardous (350+)" },
+        { color: "#8B0000", label: "Very Unhealthy (250-350)" },
+        { color: "#FF0000", label: "Unhealthy (150-250)" },
+        { color: "#FFA500", label: "Unhealthy Sens (100-150)" },
+        { color: "#FFFF00", label: "Moderate (50-100)" },
+        { color: "#00FF66", label: "Good (0-50)" }
+      ]
+    };
+    return scale[selectedPollutant] || scale.pm25;
+  };
+
   return (
     <div style={{ position: "relative", height: "100%", width: "100%" }}>
       <MapContainer
-        center={[22.5828, 88.4172]}
-        zoom={12}
+        center={mapCenter}
+        zoom={11}
         style={{ height: "100%", width: "100%" }}
       >
         {/* Base Map Layer */}
@@ -439,7 +502,7 @@ function MapComponent({ liveData }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Heatmap Layer (Grid Cells) with interpolated data */}
+        {/* Heatmap Layer with IDW interpolation */}
         {showHeatmap && grid.map((cell, index) => (
           <Polygon
             key={`${selectedPollutant}-${index}`}
@@ -620,7 +683,7 @@ function MapComponent({ liveData }) {
                 fillOpacity: 0.8
               }}
             />
-            <Marker position={[22.5828, 88.4172]}>
+            <Marker position={mapCenter}>
               <Popup>
                 <div style={{ fontFamily: 'monospace' }}>
                   <strong>Average Wind Direction</strong><br/>
@@ -637,7 +700,7 @@ function MapComponent({ liveData }) {
       <div
         style={{
           position: "absolute",
-          top: 20,
+          top: 5,
           left: 20,
           background: "white",
           padding: "15px",
@@ -651,22 +714,6 @@ function MapComponent({ liveData }) {
         <h4 style={{ margin: "0 0 10px 0", fontWeight: "bold", borderBottom: "2px solid black", paddingBottom: "5px" }}>
           MAP CONTROLS {liveData?.success ? '✅ LIVE' : '⏳ SIMULATED'}
         </h4>
-        
-        {/* Time Slider */}
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ fontWeight: "bold" }}>Time Simulation</label>
-          <p style={{ margin: "5px 0" }}>
-            Hour: <strong>{hour}:00</strong>
-          </p>
-          <input
-            type="range"
-            min="0"
-            max="23"
-            value={hour}
-            onChange={(e) => setHour(Number(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
 
         {/* Pollutant Selector */}
         <div style={{ marginBottom: "15px" }}>
@@ -702,7 +749,7 @@ function MapComponent({ liveData }) {
                 onChange={(e) => setShowHeatmap(e.target.checked)}
                 style={{ marginRight: "8px" }}
               />
-              Heatmap Grid
+              Heatmap Grid (IDW Interpolation)
             </label>
             <label style={{ display: "block", marginBottom: "5px" }}>
               <input
@@ -750,7 +797,7 @@ function MapComponent({ liveData }) {
           fontSize: "12px"
         }}>
           <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
-            Station Readings:
+            Station Readings (IDW Source Data):
           </div>
           {stations.map(station => {
             const stationData = liveData?.stations?.[station.id];
@@ -764,7 +811,7 @@ function MapComponent({ liveData }) {
           })}
           <div style={{ marginTop: "8px", borderTop: "1px dashed black", paddingTop: "5px" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Map Average:</span>
+              <span>Map Average (IDW):</span>
               <strong>{avgPollution} {currentPollutant.unit}</strong>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -784,12 +831,13 @@ function MapComponent({ liveData }) {
             color: "#666"
           }}>
             <div>Stations: {liveData.metadata.successful_stations}/{liveData.metadata.total_stations} online</div>
+            <div>Interpolation: IDW (power=2) • {rows}x{cols} grid</div>
             <div>Last sync: {new Date(liveData.timestamp).toLocaleTimeString()}</div>
           </div>
         )}
       </div>
 
-      {/* Color Legend */}
+      {/* Enhanced Color Legend with Proper Severe Colors */}
       <div
         style={{
           position: "absolute",
@@ -799,35 +847,104 @@ function MapComponent({ liveData }) {
           padding: "10px",
           border: "2px solid black",
           zIndex: 1000,
-          width: "220px",
+          width: "240px",
           fontFamily: "monospace",
           fontSize: "11px"
         }}
       >
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
+        <div style={{ fontWeight: "bold", marginBottom: "8px", borderBottom: "1px solid black", paddingBottom: "4px" }}>
           {currentPollutant.name} Levels ({currentPollutant.unit})
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "15px", height: "15px", backgroundColor: "#008000", border: "1px solid black" }}></div>
-            <span>Low</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "15px", height: "15px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
-            <span>Moderate</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "15px", height: "15px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
-            <span>High</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "15px", height: "15px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
-            <span>Very High</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <div style={{ width: "15px", height: "15px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
-            <span>Severe</span>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          {/* PM2.5 specific legend with proper severe colors */}
+          {selectedPollutant === 'pm25' && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#4B0082", border: "1px solid black" }}></div>
+                <span>Hazardous (250+ µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
+                <span>Very Unhealthy (150-250 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
+                <span>Unhealthy (100-150 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
+                <span>Unhealthy for Sensitive (50-100 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
+                <span>Moderate (12-50 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#00FF66", border: "1px solid black" }}></div>
+                <span>Good (0-12 µg/m³)</span>
+              </div>
+            </>
+          )}
+          
+          {/* PM10 specific legend */}
+          {selectedPollutant === 'pm10' && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#4B0082", border: "1px solid black" }}></div>
+                <span>Hazardous (350+ µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
+                <span>Very Unhealthy (250-350 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
+                <span>Unhealthy (150-250 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
+                <span>Unhealthy for Sensitive (100-150 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
+                <span>Moderate (50-100 µg/m³)</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#00FF66", border: "1px solid black" }}></div>
+                <span>Good (0-50 µg/m³)</span>
+              </div>
+            </>
+          )}
+
+          {/* Generic legend for other pollutants */}
+          {selectedPollutant !== 'pm25' && selectedPollutant !== 'pm10' && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#4B0082", border: "1px solid black" }}></div>
+                <span>Severe/Hazardous</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
+                <span>Very High</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
+                <span>High</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
+                <span>Moderate High</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
+                <span>Moderate</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "20px", height: "20px", backgroundColor: "#00FF66", border: "1px solid black" }}></div>
+                <span>Good/Low</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
