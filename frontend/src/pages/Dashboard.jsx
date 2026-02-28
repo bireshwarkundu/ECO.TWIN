@@ -208,30 +208,33 @@ const Dashboard = () => {
 
             <div className="max-w-7xl mx-auto p-4 md:p-8">
 
-                {/* Header Section */}
-                <header className="mb-12 border-b-4 border-black pb-6 flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8 bg-[#00CFFF] border-4 p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-                    <div>
-                        <h1 className="text-5xl md:text-7xl font-black bg-[#FFCC00] px-4 py-2 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] inline-block w-max leading-none uppercase tracking-tight" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                            LIVE TELEMETRY
-                        </h1>
-                        <h2 className="text-xl font-bold bg-white border-4 border-black px-4 py-2 mt-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-max flex items-center gap-3">
-                            <Zap size={24} className="text-[#FF3366] fill-[#FF3366]" /> REAL-TIME NETWORK • 4 STATIONS ONLINE
-                        </h2>
+                {/* Main Title */}
+                <h1 className="text-5xl md:text-7xl font-black bg-[#FFCC00] px-4 py-2 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] inline-block w-max leading-none uppercase tracking-tight mb-8" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    LIVE TELEMETRY
+                </h1>
+
+                {/* Status and Actions Bar (The Blue Box) */}
+                <div className="mb-12 bg-[#00CFFF] border-4 border-black p-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col xl:flex-row justify-between items-center gap-6">
+                    {/* Status Badge */}
+                    <div className="text-sm md:text-base font-black bg-white border-4 border-black px-6 py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] w-full xl:w-auto flex items-center justify-center xl:justify-start gap-3 whitespace-nowrap uppercase">
+                        <Zap size={20} className="text-[#FF3366] fill-[#FF3366]" /> REAL-TIME NETWORK • {allStationsData?.metadata?.successful_stations || 4} STATIONS ONLINE
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
-                        <ActionButton onClick={fetchAllStationsData} disabled={loading} bg="#FF3366">
-                            <span className="text-white font-black">{loading ? 'REFRESHING...' : 'FORCE REFRESH'}</span>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-row flex-wrap justify-center xl:justify-end gap-3 w-full xl:w-auto">
+                        <ActionButton onClick={fetchAllStationsData} disabled={loading} bg="#FF3366" className="px-6 py-3 text-sm flex-1 xl:flex-none">
+                            <span className="text-white font-black whitespace-nowrap">{loading ? 'REFRESHING...' : 'FORCE REFRESH'}</span>
                         </ActionButton>
-                        <ActionButton onClick={saveToHistory} bg="#00FF66">
-                            <span className="text-black font-black uppercase">SAVE RECORD</span>
+                        <ActionButton onClick={saveToHistory} bg="#00FF66" className="px-6 py-3 text-sm flex-1 xl:flex-none">
+                            <span className="text-black font-black uppercase whitespace-nowrap">SAVE RECORD</span>
                         </ActionButton>
-                        <ActionButton onClick={() => setShowMap(!showMap)} bg="#7B61FF">
-                            <span className="text-white font-black uppercase flex items-center gap-2">
-                                <Map size={20} /> {showMap ? 'HIDE MAP' : 'SHOW MAP'}
+                        <ActionButton onClick={() => setShowMap(!showMap)} bg="#7B61FF" className="px-6 py-3 text-sm flex items-center justify-center gap-2 flex-1 xl:flex-none">
+                            <span className="text-white font-black uppercase flex items-center gap-2 whitespace-nowrap">
+                                <Map size={18} /> {showMap ? 'HIDE MAP' : 'SHOW MAP'}
                             </span>
                         </ActionButton>
                     </div>
-                </header>
+                </div>
 
                 {/* ===== STATION SELECTOR GOES HERE ===== */}
                 {/* Replace the old station grid with this */}
