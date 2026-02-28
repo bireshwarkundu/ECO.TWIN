@@ -22,12 +22,8 @@ const fixLeafletIcons = () => {
   });
 };
 
-// Call the fix function
 fixLeafletIcons();
 
-// ---------------------------
-// 1️⃣ Define Bounding Box based on station coordinates
-// ---------------------------
 const stations = [
   {
     id: 'bidhanagar-east',
@@ -55,7 +51,6 @@ const stations = [
   }
 ];
 
-// Calculate bounding box from stations with 10% padding
 const calculateBounds = () => {
   const lats = stations.map(s => s.position[0]);
   const lngs = stations.map(s => s.position[1]);
@@ -65,7 +60,6 @@ const calculateBounds = () => {
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
 
-  // Add 10% padding
   const latPadding = (maxLat - minLat) * 0.1;
   const lngPadding = (maxLng - minLng) * 0.1;
 
@@ -79,14 +73,12 @@ const bounds = calculateBounds();
 const southWest = bounds.southWest;
 const northEast = bounds.northEast;
 
-// Grid resolution: 50x50 for smoother interpolation
 const rows = 50;
 const cols = 50;
 
 const latStep = (northEast[0] - southWest[0]) / rows;
 const lngStep = (northEast[1] - southWest[1]) / cols;
 
-// Sample traffic hotspots
 const trafficHotspots = [
   { pos: [22.575, 88.43], name: "City Center", intensity: "high" },
   { pos: [22.59, 88.41], name: "Sector V Junction", intensity: "very high" },
@@ -94,20 +86,17 @@ const trafficHotspots = [
   { pos: [22.585, 88.45], name: "Nicco Park", intensity: "low" },
 ];
 
-// Sample school locations (sensitive areas)
 const schools = [
   { pos: [22.578, 88.425], name: "Delhi Public School", students: 1200 },
   { pos: [22.588, 88.415], name: "St. Xavier's School", students: 800 },
   { pos: [22.572, 88.405], name: "Salt Lake School", students: 600 },
 ];
 
-// Sample hospitals
 const hospitals = [
   { pos: [22.58, 88.42], name: "AMRI Hospital", beds: 500 },
   { pos: [22.577, 88.435], name: "Apollo Clinic", beds: 200 },
 ];
 
-// All available pollutants with enhanced color scales
 const pollutants = [
   { id: 'pm25', name: 'PM2.5', unit: 'µg/m³', baseColor: '#FF3366' },
   { id: 'pm10', name: 'PM10', unit: 'µg/m³', baseColor: '#FF8C42' },
@@ -123,99 +112,127 @@ const pollutants = [
   { id: 'wind_direction', name: 'Wind Direction', unit: '°', baseColor: '#7B61FF' }
 ];
 
-// ---------------------------
-// 2️⃣ Utility Functions
-// ---------------------------
 const getDistance = (lat1, lng1, lat2, lng2) => {
   return Math.sqrt(
     Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2)
   );
 };
 
-// Enhanced color scale with proper severe/hazardous colors
+// ---------------------------
+// ✅ FIXED: Color thresholds now match the legend labels exactly
+// ---------------------------
 const getColor = (value, pollutant = 'pm25') => {
-  // Different color scales for different pollutants
   const scales = {
     pm25: [
-      { threshold: 300, color: "#4B0082" }, // Indigo - Hazardous
-      { threshold: 250, color: "#8B0000" }, // Dark Red - Very Unhealthy
-      { threshold: 150, color: "#FF0000" }, // Red - Unhealthy
-      { threshold: 100, color: "#FFA500" }, // Orange - Unhealthy for Sensitive
-      { threshold: 50, color: "#FFFF00" },  // Yellow - Moderate
-      { threshold: 0, color: "#00FF66" }    // Green - Good
+      // Legend: Hazardous (250+), Very Unhealthy (150-250), Unhealthy (100-150),
+      //         Unhealthy Sens. (50-100), Moderate (12-50), Good (0-12)
+      { threshold: 250, color: "#4B0082" }, // Hazardous       → 250+
+      { threshold: 150, color: "#8B0000" }, // Very Unhealthy  → 150-250
+      { threshold: 100, color: "#FF0000" }, // Unhealthy       → 100-150
+      { threshold: 50,  color: "#FFA500" }, // Unhealthy Sens. → 50-100  ← 53 now correctly falls HERE (orange)
+      { threshold: 12,  color: "#FFFF00" }, // Moderate        → 12-50
+      { threshold: 0,   color: "#00FF66" }  // Good            → 0-12
     ],
     pm10: [
-      { threshold: 420, color: "#4B0082" }, // Hazardous
-      { threshold: 350, color: "#8B0000" }, // Very Unhealthy
-      { threshold: 250, color: "#FF0000" }, // Unhealthy
-      { threshold: 150, color: "#FFA500" }, // Unhealthy for Sensitive
-      { threshold: 100, color: "#FFFF00" }, // Moderate
-      { threshold: 0, color: "#00FF66" }    // Good
+      // Legend: Hazardous (350+), Very Unhealthy (250-350), Unhealthy (150-250),
+      //         Unhealthy Sens. (100-150), Moderate (50-100), Good (0-50)
+      { threshold: 350, color: "#4B0082" }, // Hazardous       → 350+
+      { threshold: 250, color: "#8B0000" }, // Very Unhealthy  → 250-350
+      { threshold: 150, color: "#FF0000" }, // Unhealthy       → 150-250
+      { threshold: 100, color: "#FFA500" }, // Unhealthy Sens. → 100-150
+      { threshold: 50,  color: "#FFFF00" }, // Moderate        → 50-100
+      { threshold: 0,   color: "#00FF66" }  // Good            → 0-50
     ],
     no2: [
-      { threshold: 200, color: "#4B0082" }, // Hazardous
-      { threshold: 150, color: "#8B0000" }, // Very Unhealthy
-      { threshold: 100, color: "#FF0000" }, // Unhealthy
-      { threshold: 60, color: "#FFA500" },  // Unhealthy for Sensitive
-      { threshold: 30, color: "#FFFF00" },  // Moderate
-      { threshold: 0, color: "#90EE90" }    // Good
+      // WHO guideline: Good <25, Moderate 25-50, Unhealthy Sens. 50-100,
+      //                Unhealthy 100-200, Very Unhealthy 200-400, Hazardous 400+
+      { threshold: 400, color: "#4B0082" }, // Hazardous       → 400+
+      { threshold: 200, color: "#8B0000" }, // Very Unhealthy  → 200-400
+      { threshold: 100, color: "#FF0000" }, // Unhealthy       → 100-200
+      { threshold: 50,  color: "#FFA500" }, // Unhealthy Sens. → 50-100
+      { threshold: 25,  color: "#FFFF00" }, // Moderate        → 25-50
+      { threshold: 0,   color: "#90EE90" }  // Good            → 0-25
     ],
     co: [
-      { threshold: 30, color: "#4B0082" },  // Hazardous
-      { threshold: 20, color: "#8B0000" },  // Very Unhealthy
-      { threshold: 15, color: "#FF0000" },  // Unhealthy
-      { threshold: 10, color: "#FFA500" },  // Unhealthy for Sensitive
-      { threshold: 5, color: "#FFFF00" },   // Moderate
-      { threshold: 0, color: "#90EE90" }    // Good
+      // Standard CO breakpoints (ppm)
+      { threshold: 30,  color: "#4B0082" }, // Hazardous       → 30+
+      { threshold: 15,  color: "#8B0000" }, // Very Unhealthy  → 15-30
+      { threshold: 10,  color: "#FF0000" }, // Unhealthy       → 10-15
+      { threshold: 5,   color: "#FFA500" }, // Unhealthy Sens. → 5-10
+      { threshold: 2,   color: "#FFFF00" }, // Moderate        → 2-5
+      { threshold: 0,   color: "#90EE90" }  // Good            → 0-2
     ],
     so2: [
-      { threshold: 300, color: "#4B0082" }, // Hazardous
-      { threshold: 200, color: "#8B0000" }, // Very Unhealthy
-      { threshold: 150, color: "#FF0000" }, // Unhealthy
-      { threshold: 80, color: "#FFA500" },  // Unhealthy for Sensitive
-      { threshold: 40, color: "#FFFF00" },  // Moderate
-      { threshold: 0, color: "#ADD8E6" }    // Good
+      // SO2 breakpoints (ppb)
+      { threshold: 300, color: "#4B0082" }, // Hazardous       → 300+
+      { threshold: 200, color: "#8B0000" }, // Very Unhealthy  → 200-300
+      { threshold: 100, color: "#FF0000" }, // Unhealthy       → 100-200
+      { threshold: 40,  color: "#FFA500" }, // Unhealthy Sens. → 40-100
+      { threshold: 15,  color: "#FFFF00" }, // Moderate        → 15-40
+      { threshold: 0,   color: "#ADD8E6" }  // Good            → 0-15
     ],
     o3: [
-      { threshold: 250, color: "#4B0082" }, // Hazardous
-      { threshold: 200, color: "#8B0000" }, // Very Unhealthy
-      { threshold: 150, color: "#FF0000" }, // Unhealthy
-      { threshold: 100, color: "#FFA500" }, // Unhealthy for Sensitive
-      { threshold: 50, color: "#FFFF00" },  // Moderate
-      { threshold: 0, color: "#ADD8E6" }    // Good
+      // O3 breakpoints (ppb)
+      { threshold: 200, color: "#4B0082" }, // Hazardous       → 200+
+      { threshold: 150, color: "#8B0000" }, // Very Unhealthy  → 150-200
+      { threshold: 100, color: "#FF0000" }, // Unhealthy       → 100-150
+      { threshold: 60,  color: "#FFA500" }, // Unhealthy Sens. → 60-100
+      { threshold: 30,  color: "#FFFF00" }, // Moderate        → 30-60
+      { threshold: 0,   color: "#ADD8E6" }  // Good            → 0-30
     ],
     no: [
-      { threshold: 200, color: "#4B0082" }, // Hazardous
-      { threshold: 150, color: "#8B0000" }, // Very Unhealthy
-      { threshold: 100, color: "#FF0000" }, // Unhealthy
-      { threshold: 60, color: "#FFA500" },  // Unhealthy for Sensitive
-      { threshold: 30, color: "#FFFF00" },  // Moderate
-      { threshold: 0, color: "#DDA0DD" }    // Good
+      // NO breakpoints (ppb)
+      { threshold: 200, color: "#4B0082" }, // Hazardous       → 200+
+      { threshold: 100, color: "#8B0000" }, // Very Unhealthy  → 100-200
+      { threshold: 60,  color: "#FF0000" }, // Unhealthy       → 60-100
+      { threshold: 30,  color: "#FFA500" }, // Unhealthy Sens. → 30-60
+      { threshold: 10,  color: "#FFFF00" }, // Moderate        → 10-30
+      { threshold: 0,   color: "#DDA0DD" }  // Good            → 0-10
     ],
     nox: [
-      { threshold: 250, color: "#4B0082" }, // Hazardous
-      { threshold: 200, color: "#8B0000" }, // Very Unhealthy
-      { threshold: 150, color: "#FF0000" }, // Unhealthy
-      { threshold: 80, color: "#FFA500" },  // Unhealthy for Sensitive
-      { threshold: 40, color: "#FFFF00" },  // Moderate
-      { threshold: 0, color: "#C0C0C0" }    // Good
+      // NOx breakpoints (ppb)
+      { threshold: 250, color: "#4B0082" }, // Hazardous       → 250+
+      { threshold: 150, color: "#8B0000" }, // Very Unhealthy  → 150-250
+      { threshold: 80,  color: "#FF0000" }, // Unhealthy       → 80-150
+      { threshold: 40,  color: "#FFA500" }, // Unhealthy Sens. → 40-80
+      { threshold: 15,  color: "#FFFF00" }, // Moderate        → 15-40
+      { threshold: 0,   color: "#C0C0C0" }  // Good            → 0-15
     ],
     temperature: [
-      { threshold: 45, color: "#8B0000" },  // Extreme Heat
-      { threshold: 40, color: "#FF0000" },  // Very Hot
-      { threshold: 35, color: "#FFA500" },  // Hot
-      { threshold: 30, color: "#FFFF00" },  // Warm
-      { threshold: 20, color: "#00FF66" },  // Pleasant
-      { threshold: 10, color: "#4169E1" },  // Cool
-      { threshold: 0, color: "#00008B" }    // Cold
+      { threshold: 45, color: "#8B0000" },  // Extreme Heat    → 45+
+      { threshold: 40, color: "#FF0000" },  // Very Hot        → 40-45
+      { threshold: 35, color: "#FFA500" },  // Hot             → 35-40
+      { threshold: 30, color: "#FFFF00" },  // Warm            → 30-35
+      { threshold: 20, color: "#00FF66" },  // Pleasant        → 20-30
+      { threshold: 10, color: "#4169E1" },  // Cool            → 10-20
+      { threshold: 0,  color: "#00008B" }   // Cold            → 0-10
     ],
     humidity: [
-      { threshold: 90, color: "#00008B" },  // Very Humid
-      { threshold: 80, color: "#4169E1" },  // Humid
-      { threshold: 70, color: "#87CEEB" },  // Moderate Humid
-      { threshold: 50, color: "#ADD8E6" },  // Comfortable
-      { threshold: 30, color: "#F0F8FF" },  // Dry
-      { threshold: 0, color: "#FFFFFF" }    // Very Dry
+      { threshold: 90, color: "#00008B" },  // Very Humid      → 90+
+      { threshold: 80, color: "#4169E1" },  // Humid           → 80-90
+      { threshold: 70, color: "#87CEEB" },  // Moderate Humid  → 70-80
+      { threshold: 50, color: "#ADD8E6" },  // Comfortable     → 50-70
+      { threshold: 30, color: "#F0F8FF" },  // Dry             → 30-50
+      { threshold: 0,  color: "#FFFFFF" }   // Very Dry        → 0-30
+    ],
+    wind_speed: [
+      { threshold: 15, color: "#4B0082" },  // Storm           → 15+
+      { threshold: 10, color: "#FF0000" },  // Strong          → 10-15
+      { threshold: 7,  color: "#FFA500" },  // Moderate-High   → 7-10
+      { threshold: 4,  color: "#FFFF00" },  // Moderate        → 4-7
+      { threshold: 1,  color: "#00FF66" },  // Light           → 1-4
+      { threshold: 0,  color: "#ADD8E6" }   // Calm            → 0-1
+    ],
+    wind_direction: [
+      // Wind direction (0-360°) — use hue cycling, no AQI meaning
+      { threshold: 315, color: "#4B0082" }, // NW
+      { threshold: 270, color: "#7B61FF" }, // W
+      { threshold: 225, color: "#00CFFF" }, // SW
+      { threshold: 180, color: "#00FF66" }, // S
+      { threshold: 135, color: "#FFFF00" }, // SE
+      { threshold: 90,  color: "#FFA500" }, // E
+      { threshold: 45,  color: "#FF0000" }, // NE
+      { threshold: 0,   color: "#FF3366" }  // N
     ]
   };
 
@@ -223,13 +240,11 @@ const getColor = (value, pollutant = 'pm25') => {
   for (let level of scale) {
     if (value > level.threshold) return level.color;
   }
-  return scale[scale.length - 1].color; // Return the lowest threshold color
+  return scale[scale.length - 1].color;
 };
 
 // ---------------------------
-// 3️⃣ INDUSTRY STANDARD IDW INTERPOLATION
-// Formula: V = Σ(vi / di^p) / Σ(1 / di^p)
-// where p = 2 (standard power parameter)
+// IDW Interpolation (unchanged)
 // ---------------------------
 const idwInterpolate = (lat, lng, stationData, pollutant, power = 2) => {
   let weightedSum = 0;
@@ -243,21 +258,17 @@ const idwInterpolate = (lat, lng, stationData, pollutant, power = 2) => {
     const distance = getDistance(lat, lng, station.position[0], station.position[1]);
     validStations++;
 
-    // If we're exactly at a station, return its exact value
     if (distance < 0.0001) {
       return stationInfo[pollutant];
     }
 
-    // IDW formula: weight = 1 / distance^p
     const weight = 1 / Math.pow(distance, power);
     weightedSum += stationInfo[pollutant] * weight;
     weightSum += weight;
   });
 
-  // If no valid stations, return null
   if (validStations === 0) return null;
 
-  // If only one valid station, return its value (no interpolation needed)
   if (validStations === 1) {
     const singleStation = stations.find(s =>
       stationData?.stations?.[s.id]?.[pollutant] !== null &&
@@ -266,17 +277,12 @@ const idwInterpolate = (lat, lng, stationData, pollutant, power = 2) => {
     return stationData?.stations?.[singleStation?.id]?.[pollutant] || null;
   }
 
-  // Return interpolated value
   return weightSum > 0 ? weightedSum / weightSum : null;
 };
 
-// ---------------------------
-// 4️⃣ Grid Generation with IDW interpolation (NO TIME FACTOR)
-// ---------------------------
 const generateGrid = (pollutant, stationData) => {
   const cells = [];
 
-  // Get valid station data
   const hasValidData = stationData?.stations &&
     Object.values(stationData.stations).some(s => s && s[pollutant] !== null && s[pollutant] !== undefined);
 
@@ -293,10 +299,8 @@ const generateGrid = (pollutant, stationData) => {
       let pollutionValue;
 
       if (hasValidData) {
-        // Use IDW interpolation with power=2 (standard) - NO TIME FACTOR
         pollutionValue = idwInterpolate(centerLat, centerLng, stationData, pollutant, 2);
       } else {
-        // Fallback to simulated data if no station data
         const baseValue = 50;
         const distanceToCenter = getDistance(centerLat, centerLng, 22.5828, 88.4172);
         const maxDistance = getDistance(southWest[0], southWest[1], northEast[0], northEast[1]);
@@ -306,7 +310,6 @@ const generateGrid = (pollutant, stationData) => {
         pollutionValue = baseValue * distanceFactor * randomFactor;
       }
 
-      // Only add cell if we have a valid value
       if (pollutionValue !== null) {
         cells.push({
           positions: [
@@ -325,7 +328,6 @@ const generateGrid = (pollutant, stationData) => {
   return cells;
 };
 
-// Generate isopleth contours (simplified)
 const generateContours = (grid, levels = [50, 100, 150, 200, 250, 300]) => {
   return levels.map(level => ({
     level,
@@ -333,7 +335,6 @@ const generateContours = (grid, levels = [50, 100, 150, 200, 250, 300]) => {
   }));
 };
 
-// Create custom icons for schools and hospitals
 const createSchoolIcon = () => {
   return L.divIcon({
     className: 'custom-div-icon',
@@ -352,7 +353,6 @@ const createHospitalIcon = () => {
   });
 };
 
-// Create custom station icon
 const createStationIcon = (color) => {
   return L.divIcon({
     className: 'custom-div-icon',
@@ -363,7 +363,116 @@ const createStationIcon = (color) => {
 };
 
 // ---------------------------
-// 5️⃣ Main Component
+// ✅ FIXED: Legend items now match getColor thresholds exactly
+// ---------------------------
+const getLegendItems = (selectedPollutant) => {
+  const legends = {
+    pm25: [
+      { color: "#4B0082", label: "Hazardous (250+)" },
+      { color: "#8B0000", label: "Very Unhealthy (150–250)" },
+      { color: "#FF0000", label: "Unhealthy (100–150)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (50–100)" },
+      { color: "#FFFF00", label: "Moderate (12–50)" },
+      { color: "#00FF66", label: "Good (0–12)" }
+    ],
+    pm10: [
+      { color: "#4B0082", label: "Hazardous (350+)" },
+      { color: "#8B0000", label: "Very Unhealthy (250–350)" },
+      { color: "#FF0000", label: "Unhealthy (150–250)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (100–150)" },
+      { color: "#FFFF00", label: "Moderate (50–100)" },
+      { color: "#00FF66", label: "Good (0–50)" }
+    ],
+    no2: [
+      { color: "#4B0082", label: "Hazardous (400+)" },
+      { color: "#8B0000", label: "Very Unhealthy (200–400)" },
+      { color: "#FF0000", label: "Unhealthy (100–200)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (50–100)" },
+      { color: "#FFFF00", label: "Moderate (25–50)" },
+      { color: "#90EE90", label: "Good (0–25)" }
+    ],
+    co: [
+      { color: "#4B0082", label: "Hazardous (30+ ppm)" },
+      { color: "#8B0000", label: "Very Unhealthy (15–30)" },
+      { color: "#FF0000", label: "Unhealthy (10–15)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (5–10)" },
+      { color: "#FFFF00", label: "Moderate (2–5)" },
+      { color: "#90EE90", label: "Good (0–2)" }
+    ],
+    so2: [
+      { color: "#4B0082", label: "Hazardous (300+)" },
+      { color: "#8B0000", label: "Very Unhealthy (200–300)" },
+      { color: "#FF0000", label: "Unhealthy (100–200)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (40–100)" },
+      { color: "#FFFF00", label: "Moderate (15–40)" },
+      { color: "#ADD8E6", label: "Good (0–15)" }
+    ],
+    o3: [
+      { color: "#4B0082", label: "Hazardous (200+)" },
+      { color: "#8B0000", label: "Very Unhealthy (150–200)" },
+      { color: "#FF0000", label: "Unhealthy (100–150)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (60–100)" },
+      { color: "#FFFF00", label: "Moderate (30–60)" },
+      { color: "#ADD8E6", label: "Good (0–30)" }
+    ],
+    no: [
+      { color: "#4B0082", label: "Hazardous (200+)" },
+      { color: "#8B0000", label: "Very Unhealthy (100–200)" },
+      { color: "#FF0000", label: "Unhealthy (60–100)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (30–60)" },
+      { color: "#FFFF00", label: "Moderate (10–30)" },
+      { color: "#DDA0DD", label: "Good (0–10)" }
+    ],
+    nox: [
+      { color: "#4B0082", label: "Hazardous (250+)" },
+      { color: "#8B0000", label: "Very Unhealthy (150–250)" },
+      { color: "#FF0000", label: "Unhealthy (80–150)" },
+      { color: "#FFA500", label: "Unhealthy Sens. (40–80)" },
+      { color: "#FFFF00", label: "Moderate (15–40)" },
+      { color: "#C0C0C0", label: "Good (0–15)" }
+    ],
+    temperature: [
+      { color: "#8B0000", label: "Extreme Heat (45°C+)" },
+      { color: "#FF0000", label: "Very Hot (40–45°C)" },
+      { color: "#FFA500", label: "Hot (35–40°C)" },
+      { color: "#FFFF00", label: "Warm (30–35°C)" },
+      { color: "#00FF66", label: "Pleasant (20–30°C)" },
+      { color: "#4169E1", label: "Cool (10–20°C)" },
+      { color: "#00008B", label: "Cold (0–10°C)" }
+    ],
+    humidity: [
+      { color: "#00008B", label: "Very Humid (90%+)" },
+      { color: "#4169E1", label: "Humid (80–90%)" },
+      { color: "#87CEEB", label: "Moderate Humid (70–80%)" },
+      { color: "#ADD8E6", label: "Comfortable (50–70%)" },
+      { color: "#F0F8FF", label: "Dry (30–50%)" },
+      { color: "#FFFFFF", label: "Very Dry (0–30%)" }
+    ],
+    wind_speed: [
+      { color: "#4B0082", label: "Storm (15+ m/s)" },
+      { color: "#FF0000", label: "Strong (10–15 m/s)" },
+      { color: "#FFA500", label: "Moderate-High (7–10)" },
+      { color: "#FFFF00", label: "Moderate (4–7)" },
+      { color: "#00FF66", label: "Light (1–4)" },
+      { color: "#ADD8E6", label: "Calm (0–1)" }
+    ],
+    wind_direction: [
+      { color: "#FF3366", label: "N (0–45°)" },
+      { color: "#FF0000", label: "NE (45–90°)" },
+      { color: "#FFA500", label: "E (90–135°)" },
+      { color: "#FFFF00", label: "SE (135–180°)" },
+      { color: "#00FF66", label: "S (180–225°)" },
+      { color: "#00CFFF", label: "SW (225–270°)" },
+      { color: "#7B61FF", label: "W (270–315°)" },
+      { color: "#4B0082", label: "NW (315–360°)" }
+    ]
+  };
+
+  return legends[selectedPollutant] || legends.pm25;
+};
+
+// ---------------------------
+// Main Component
 // ---------------------------
 function MapComponent({ liveData }) {
   const [selectedPollutant, setSelectedPollutant] = useState('pm25');
@@ -374,7 +483,6 @@ function MapComponent({ liveData }) {
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [selectedStation, setSelectedStation] = useState(null);
 
-  // Generate grid using IDW interpolation (NO TIME FACTOR)
   const grid = useMemo(() =>
     generateGrid(selectedPollutant, liveData),
     [selectedPollutant, liveData]
@@ -389,7 +497,6 @@ function MapComponent({ liveData }) {
     avg: grid.length > 0 ? (grid.reduce((a, c) => a + c.value, 0) / grid.length).toFixed(2) : 'N/A'
   });
 
-  // Calculate statistics
   const avgPollution = useMemo(() => {
     if (!grid.length) return "0";
     const values = grid.map(cell => cell.value);
@@ -406,10 +513,8 @@ function MapComponent({ liveData }) {
     return Math.min(...grid.map(cell => cell.value)).toFixed(1);
   }, [grid]);
 
-  // Get current pollutant unit
   const currentPollutant = pollutants.find(p => p.id === selectedPollutant) || pollutants[0];
 
-  // Get average wind data from stations
   const avgWindSpeed = useMemo(() => {
     if (!liveData?.stations) return 1.06;
     const speeds = Object.values(liveData.stations)
@@ -425,8 +530,6 @@ function MapComponent({ liveData }) {
       .map(s => s?.wind_direction)
       .filter(v => v !== null && v !== undefined);
     if (directions.length === 0) return 249.36;
-
-    // Average of circular data (simplified)
     return directions.reduce((a, b) => a + b, 0) / directions.length;
   }, [liveData]);
 
@@ -435,7 +538,6 @@ function MapComponent({ liveData }) {
     direction: avgWindDirection
   };
 
-  // Create wind arrow points
   const createWindArrow = () => {
     const arrowLength = 0.02;
     const startLat = 22.5828;
@@ -444,7 +546,6 @@ function MapComponent({ liveData }) {
     const endLat = startLat + arrowLength * Math.cos(rad);
     const endLng = startLng + arrowLength * Math.sin(rad);
 
-    // Arrow head
     const headLength = 0.007;
     const angle = Math.atan2(endLng - startLng, endLat - startLat);
     const headLat1 = endLat - headLength * Math.cos(angle - 0.5);
@@ -460,37 +561,16 @@ function MapComponent({ liveData }) {
 
   const windArrow = createWindArrow();
 
-  // Calculate map center based on bounds
   const mapCenter = [
     (southWest[0] + northEast[0]) / 2,
     (southWest[1] + northEast[1]) / 2
   ];
 
-  // Get color scale items for legend
-  const getLegendItems = () => {
-    const scale = {
-      pm25: [
-        { color: "#4B0082", label: "Hazardous (250+)" },
-        { color: "#8B0000", label: "Very Unhealthy (150-250)" },
-        { color: "#FF0000", label: "Unhealthy (100-150)" },
-        { color: "#FFA500", label: "Unhealthy Sens (50-100)" },
-        { color: "#FFFF00", label: "Moderate (12-50)" },
-        { color: "#00FF66", label: "Good (0-12)" }
-      ],
-      pm10: [
-        { color: "#4B0082", label: "Hazardous (350+)" },
-        { color: "#8B0000", label: "Very Unhealthy (250-350)" },
-        { color: "#FF0000", label: "Unhealthy (150-250)" },
-        { color: "#FFA500", label: "Unhealthy Sens (100-150)" },
-        { color: "#FFFF00", label: "Moderate (50-100)" },
-        { color: "#00FF66", label: "Good (0-50)" }
-      ]
-    };
-    return scale[selectedPollutant] || scale.pm25;
-  };
+  // ✅ Use the unified getLegendItems function
+  const legendItems = getLegendItems(selectedPollutant);
 
   return (
-    <div className="flex flex-col lg:flex-row w-full bg-[#FDFBF7] font-mono border-t-0 " style={{ minHeight: "700px" }}>
+    <div className="flex flex-col lg:flex-row w-full bg-[#FDFBF7] font-mono border-t-0" style={{ minHeight: "700px" }}>
 
       {/* Control Panel - Left Sidebar */}
       <div className="w-full lg:w-[320px] bg-white border-b-4 lg:border-b-0 lg:border-r-4 border-black p-4 flex flex-col shrink-0 overflow-y-auto z-10">
@@ -583,13 +663,12 @@ function MapComponent({ liveData }) {
           zoom={11}
           style={{ height: "100%", width: "100%" }}
         >
-          {/* Base Map Layer */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Heatmap Layer with IDW interpolation */}
+          {/* Heatmap Layer */}
           {showHeatmap && grid.map((cell, index) => (
             <Polygon
               key={`${selectedPollutant}-${index}`}
@@ -714,7 +793,7 @@ function MapComponent({ liveData }) {
             </CircleMarker>
           ))}
 
-          {/* Schools (Sensitive Areas) */}
+          {/* Schools */}
           {showSensitive && schools.map((school, idx) => (
             <Marker
               key={`school-${idx}`}
@@ -748,27 +827,16 @@ function MapComponent({ liveData }) {
             </Marker>
           ))}
 
-          {/* Wind Direction Visualization */}
+          {/* Wind Direction */}
           {showWind && (
             <LayerGroup>
-              {/* Wind arrow shaft */}
               <Polygon
                 positions={windArrow.shaft}
-                pathOptions={{
-                  color: "#7B61FF",
-                  weight: 4,
-                  opacity: 0.8
-                }}
+                pathOptions={{ color: "#7B61FF", weight: 4, opacity: 0.8 }}
               />
-              {/* Wind arrow head */}
               <Polygon
                 positions={windArrow.head}
-                pathOptions={{
-                  color: "#7B61FF",
-                  weight: 2,
-                  fillColor: "#7B61FF",
-                  fillOpacity: 0.8
-                }}
+                pathOptions={{ color: "#7B61FF", weight: 2, fillColor: "#7B61FF", fillOpacity: 0.8 }}
               />
               <Marker position={mapCenter}>
                 <Popup>
@@ -784,47 +852,21 @@ function MapComponent({ liveData }) {
         </MapContainer>
       </div>
 
-      {/* Legend Sidebar - Right */}
+      {/* ✅ FIXED: Legend - now dynamically uses getLegendItems() for all pollutants */}
       <div className="w-full lg:w-[260px] bg-[#FFCC00] border-t-4 lg:border-t-0 lg:border-l-4 border-black p-4 shrink-0 flex flex-col z-10 overflow-y-auto">
         <div className="font-black text-lg border-b-4 border-black pb-2 mb-4 bg-white p-2 border-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
           {currentPollutant.name} LEVELS
         </div>
         <div className="flex flex-col gap-3 font-bold text-sm bg-white p-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          {/* PM2.5 specific legend */}
-          {selectedPollutant === 'pm25' && (
-            <>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4B0082] border-2 border-black"></div>Hazardous (250+)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#8B0000] border-2 border-black"></div>Very Unhealthy (150-250)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FF0000] border-2 border-black"></div>Unhealthy (100-150)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFA500] border-2 border-black"></div>Unhealthy Sens. (50-100)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFFF00] border-2 border-black"></div>Moderate (12-50)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#00FF66] border-2 border-black"></div>Good (0-12)</div>
-            </>
-          )}
-
-          {/* PM10 specific legend */}
-          {selectedPollutant === 'pm10' && (
-            <>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4B0082] border-2 border-black"></div>Hazardous (350+)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#8B0000] border-2 border-black"></div>Very Unhealthy (250-350)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FF0000] border-2 border-black"></div>Unhealthy (150-250)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFA500] border-2 border-black"></div>Unhealthy Sens. (100-150)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFFF00] border-2 border-black"></div>Moderate (50-100)</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#00FF66] border-2 border-black"></div>Good (0-50)</div>
-            </>
-          )}
-
-          {/* Generic legend for other pollutants */}
-          {selectedPollutant !== 'pm25' && selectedPollutant !== 'pm10' && (
-            <>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4B0082] border-2 border-black"></div>Severe/Hazardous</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#8B0000] border-2 border-black"></div>Very High</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FF0000] border-2 border-black"></div>High</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFA500] border-2 border-black"></div>Moderate High</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFFF00] border-2 border-black"></div>Moderate</div>
-              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#00FF66] border-2 border-black"></div>Good/Low</div>
-            </>
-          )}
+          {legendItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <div
+                className="w-5 h-5 border-2 border-black shrink-0"
+                style={{ background: item.color }}
+              />
+              {item.label}
+            </div>
+          ))}
         </div>
       </div>
     </div>
