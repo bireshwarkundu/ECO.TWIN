@@ -11,28 +11,28 @@ import { Activity, Thermometer, Wind, Zap, BarChart2, Droplets, Compass, Cloud, 
 
 // Station configuration
 const stations = [
-    { 
+    {
         id: 'bidhanagar-east',
         name: 'Bidhannagar East',
         color: '#FF3366',
         location: 'SECTOR V, KOLKATA',
         coordinates: [22.58157, 88.410025]
     },
-    { 
+    {
         id: 'Rabindra_Bharatia',
         name: 'Rabindra Bharati University',
         color: '#7B61FF',
         location: 'RABINDRA BHARATI, KOLKATA',
         coordinates: [22.627875, 88.3804]
     },
-    { 
+    {
         id: 'Ballygunge',
         name: 'Ballygunge',
         color: '#00FF66',
         location: 'BALLYGUNGE, KOLKATA',
         coordinates: [22.5367507, 88.3638022]
     },
-    { 
+    {
         id: 'Dasnagar',
         name: 'Dasnagar',
         color: '#FF8C42',
@@ -60,7 +60,7 @@ const Dashboard = () => {
         } catch (err) {
             console.error('Error fetching live data:', err);
             setError('Failed to fetch live data. Please try again.');
-            
+
             // Fallback data (keep your existing fallback)
             setAllStationsData({
                 success: true,
@@ -166,7 +166,7 @@ const Dashboard = () => {
                 station_name: getCurrentStation()?.name,
                 ...currentStationData
             };
-            
+
             await axios.post('http://localhost:5001/api/history', { data: [payload] });
             alert("✓ RECORD SAVED STRONGLY TO HISTORY!");
         } catch (err) {
@@ -187,7 +187,7 @@ const Dashboard = () => {
     const getStationAQI = (stationId) => {
         const pm25 = allStationsData?.stations?.[stationId]?.pm25;
         if (!pm25) return { level: '--', color: '#000000' };
-        
+
         if (pm25 <= 12) return { level: 'GOOD', color: '#00FF66' };
         if (pm25 <= 35.4) return { level: 'MODERATE', color: '#FFCC00' };
         if (pm25 <= 55.4) return { level: 'UNHEALTHY FOR SENSITIVE', color: '#FF8C42' };
@@ -202,8 +202,8 @@ const Dashboard = () => {
 
     return (
         <div className="w-full bg-[#FDFBF7] font-mono text-black min-h-screen pb-16">
-            <MarqueeBanner 
-                text={`⚠️ ${currentStationData ? `${aqiInfo.level} AIR QUALITY AT ${currentStation.name} - PM2.5: ${currentStationData.pm25?.toFixed(1)} µg/m³` : 'LOADING LIVE DATA...'} ⚠️`} 
+            <MarqueeBanner
+                text={`⚠️ ${currentStationData ? `${aqiInfo.level} AIR QUALITY AT ${currentStation.name} - PM2.5: ${currentStationData.pm25?.toFixed(1)} µg/m³` : 'LOADING LIVE DATA...'} ⚠️`}
             />
 
             <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -260,31 +260,10 @@ const Dashboard = () => {
                                 {allStationsData?.metadata?.successful_stations || 0}/4 STATIONS ONLINE
                             </span>
                         </div>
-                        <div className="h-[500px] w-full">
+                        <div className="w-full">
                             <MapComponent liveData={allStationsData} />
                         </div>
-                        <div className="bg-[#FDFBF7] border-t-4 border-black p-2 text-xs font-bold flex flex-wrap gap-4">
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-green border border-black"></div>
-                                <span>Low (0-40)</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-yellow border border-black"></div>
-                                <span>Moderate (40-60)</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-orange border border-black"></div>
-                                <span>High (60-80)</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-red border border-black"></div>
-                                <span>Very High (80-100)</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-darkred border border-black"></div>
-                                <span>Severe (100+)</span>
-                            </div>
-                        </div>
+
                     </div>
                 )}
 

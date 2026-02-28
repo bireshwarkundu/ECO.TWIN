@@ -490,8 +490,95 @@ function MapComponent({ liveData }) {
   };
 
   return (
-    <div style={{ position: "relative", height: "100%", width: "100%" }}>
-      <MapContainer
+    <div className="flex flex-col lg:flex-row w-full bg-[#FDFBF7] font-mono border-t-0" style={{ minHeight: "600px" }}>
+      
+      {/* Control Panel - Left Sidebar */}
+      <div className="w-full lg:w-[320px] bg-white border-b-4 lg:border-b-0 lg:border-r-4 border-black p-4 flex flex-col shrink-0 overflow-y-auto z-10">
+        <h4 className="font-black text-lg border-b-4 border-black pb-2 mb-4">
+          MAP CONTROLS {liveData?.success ? '✅ LIVE' : '⏳ SIM'}
+        </h4>
+
+        {/* Pollutant Selector */}
+        <div className="mb-4">
+          <label className="font-bold">Pollutant</label>
+          <select
+            value={selectedPollutant}
+            onChange={(e) => setSelectedPollutant(e.target.value)}
+            className="w-full p-2 mt-1 border-2 border-black font-mono font-bold bg-[#FDFBF7] cursor-pointer"
+          >
+            {pollutants.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.unit})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Layer Toggles */}
+        <div className="mb-4">
+          <label className="font-bold">Layers</label>
+          <div className="mt-1 flex flex-col gap-2">
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={showHeatmap} onChange={(e) => setShowHeatmap(e.target.checked)} className="mr-2 border-2 border-black w-4 h-4 cursor-pointer" />
+              Heatmap Grid (IDW)
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={showTraffic} onChange={(e) => setShowTraffic(e.target.checked)} className="mr-2 border-2 border-black w-4 h-4 cursor-pointer" />
+              Traffic Hotspots
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={showSensitive} onChange={(e) => setShowSensitive(e.target.checked)} className="mr-2 border-2 border-black w-4 h-4 cursor-pointer" />
+              Schools & Hospitals
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={showWind} onChange={(e) => setShowWind(e.target.checked)} className="mr-2 border-2 border-black w-4 h-4 cursor-pointer" />
+              Wind Direction
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input type="checkbox" checked={showContours} onChange={(e) => setShowContours(e.target.checked)} className="mr-2 border-2 border-black w-4 h-4 cursor-pointer" />
+              Pollution Contours
+            </label>
+          </div>
+        </div>
+
+        {/* Station Statistics */}
+        <div className="border-t-2 border-black pt-3 text-sm flex flex-col gap-2 flex-grow">
+          <div className="font-bold">Station Readings:</div>
+          {stations.map(station => {
+            const stationData = liveData?.stations?.[station.id];
+            const value = stationData?.[selectedPollutant];
+            return (
+              <div key={station.id} className="flex justify-between items-center bg-[#FDFBF7] p-1 border-b border-gray-200">
+                <span className="truncate" style={{ color: station.color }}>● {station.name}:</span>
+                <strong className="ml-2 whitespace-nowrap">{value?.toFixed(2) || 'N/A'} {currentPollutant.unit}</strong>
+              </div>
+            );
+          })}
+          
+          <div className="mt-2 pt-2 border-t-2 border-black">
+            <div className="flex justify-between">
+              <span>Map Avg:</span>
+              <strong>{avgPollution} {currentPollutant.unit}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span>Map Range:</span>
+              <strong>{minPollution} - {maxPollution} {currentPollutant.unit}</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Metadata */}
+        {liveData?.metadata && (
+          <div className="mt-4 pt-2 border-t-2 border-black text-[10px] text-gray-600 font-bold uppercase">
+            <div>Network: {liveData.metadata.successful_stations}/{liveData.metadata.total_stations} online</div>
+            <div>Sync: {new Date(liveData.timestamp).toLocaleTimeString()}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Map Content - Center */}
+      <div className="flex-1 relative z-0 h-[500px] lg:h-auto min-h-[500px]">
+        <MapContainer
         center={mapCenter}
         zoom={11}
         style={{ height: "100%", width: "100%" }}
@@ -696,253 +783,46 @@ function MapComponent({ liveData }) {
         )}
       </MapContainer>
 
-      {/* Control Panel */}
-      <div
-        style={{
-          position: "absolute",
-          top: 5,
-          left: 20,
-          background: "white",
-          padding: "15px",
-          border: "4px solid black",
-          zIndex: 1000,
-          width: "320px",
-          boxShadow: "8px 8px 0px 0px rgba(0,0,0,1)",
-          fontFamily: "monospace"
-        }}
-      >
-        <h4 style={{ margin: "0 0 10px 0", fontWeight: "bold", borderBottom: "2px solid black", paddingBottom: "5px" }}>
-          MAP CONTROLS {liveData?.success ? '✅ LIVE' : '⏳ SIMULATED'}
-        </h4>
-
-        {/* Pollutant Selector */}
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ fontWeight: "bold" }}>Pollutant</label>
-          <select
-            value={selectedPollutant}
-            onChange={(e) => setSelectedPollutant(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "5px",
-              marginTop: "5px",
-              border: "2px solid black",
-              fontFamily: "monospace",
-              fontWeight: "bold"
-            }}
-          >
-            {pollutants.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.unit})
-              </option>
-            ))}
-          </select>
+      
+      {/* Legend Sidebar - Right */}
+      <div className="w-full lg:w-[260px] bg-[#FFCC00] border-t-4 lg:border-t-0 lg:border-l-4 border-black p-4 shrink-0 flex flex-col z-10 overflow-y-auto">
+        <div className="font-black text-lg border-b-4 border-black pb-2 mb-4 bg-white p-2 border-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
+          {currentPollutant.name} LEVELS
         </div>
-
-        {/* Layer Toggles */}
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ fontWeight: "bold" }}>Layers</label>
-          <div style={{ marginTop: "5px" }}>
-            <label style={{ display: "block", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={showHeatmap}
-                onChange={(e) => setShowHeatmap(e.target.checked)}
-                style={{ marginRight: "8px" }}
-              />
-              Heatmap Grid (IDW Interpolation)
-            </label>
-            <label style={{ display: "block", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={showTraffic}
-                onChange={(e) => setShowTraffic(e.target.checked)}
-                style={{ marginRight: "8px" }}
-              />
-              Traffic Hotspots
-            </label>
-            <label style={{ display: "block", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={showSensitive}
-                onChange={(e) => setShowSensitive(e.target.checked)}
-                style={{ marginRight: "8px" }}
-              />
-              Schools & Hospitals
-            </label>
-            <label style={{ display: "block", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={showWind}
-                onChange={(e) => setShowWind(e.target.checked)}
-                style={{ marginRight: "8px" }}
-              />
-              Wind Direction
-            </label>
-            <label style={{ display: "block", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={showContours}
-                onChange={(e) => setShowContours(e.target.checked)}
-                style={{ marginRight: "8px" }}
-              />
-              Pollution Contours
-            </label>
-          </div>
-        </div>
-
-        {/* Station Statistics */}
-        <div style={{ 
-          borderTop: "2px solid black", 
-          paddingTop: "10px",
-          fontSize: "12px"
-        }}>
-          <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
-            Station Readings (IDW Source Data):
-          </div>
-          {stations.map(station => {
-            const stationData = liveData?.stations?.[station.id];
-            const value = stationData?.[selectedPollutant];
-            return (
-              <div key={station.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
-                <span style={{ color: station.color }}>● {station.name}:</span>
-                <strong>{value?.toFixed(2) || 'N/A'} {currentPollutant.unit}</strong>
-              </div>
-            );
-          })}
-          <div style={{ marginTop: "8px", borderTop: "1px dashed black", paddingTop: "5px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Map Average (IDW):</span>
-              <strong>{avgPollution} {currentPollutant.unit}</strong>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Map Range:</span>
-              <strong>{minPollution} - {maxPollution} {currentPollutant.unit}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Metadata */}
-        {liveData?.metadata && (
-          <div style={{ 
-            marginTop: "10px",
-            paddingTop: "5px",
-            borderTop: "1px solid black",
-            fontSize: "10px",
-            color: "#666"
-          }}>
-            <div>Stations: {liveData.metadata.successful_stations}/{liveData.metadata.total_stations} online</div>
-            <div>Interpolation: IDW (power=2) • {rows}x{cols} grid</div>
-            <div>Last sync: {new Date(liveData.timestamp).toLocaleTimeString()}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Enhanced Color Legend with Proper Severe Colors */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          background: "white",
-          padding: "10px",
-          border: "2px solid black",
-          zIndex: 1000,
-          width: "240px",
-          fontFamily: "monospace",
-          fontSize: "11px"
-        }}
-      >
-        <div style={{ fontWeight: "bold", marginBottom: "8px", borderBottom: "1px solid black", paddingBottom: "4px" }}>
-          {currentPollutant.name} Levels ({currentPollutant.unit})
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          {/* PM2.5 specific legend with proper severe colors */}
+        <div className="flex flex-col gap-3 font-bold text-sm bg-white p-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          {/* PM2.5 specific legend */}
           {selectedPollutant === 'pm25' && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#4B0082", border: "1px solid black" }}></div>
-                <span>Hazardous (250+ µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
-                <span>Very Unhealthy (150-250 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
-                <span>Unhealthy (100-150 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
-                <span>Unhealthy for Sensitive (50-100 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
-                <span>Moderate (12-50 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#00FF66", border: "1px solid black" }}></div>
-                <span>Good (0-12 µg/m³)</span>
-              </div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4B0082] border-2 border-black"></div>Hazardous (250+)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#8B0000] border-2 border-black"></div>Very Unhealthy (150-250)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FF0000] border-2 border-black"></div>Unhealthy (100-150)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFA500] border-2 border-black"></div>Unhealthy Sens. (50-100)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFFF00] border-2 border-black"></div>Moderate (12-50)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#00FF66] border-2 border-black"></div>Good (0-12)</div>
             </>
           )}
           
           {/* PM10 specific legend */}
           {selectedPollutant === 'pm10' && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#4B0082", border: "1px solid black" }}></div>
-                <span>Hazardous (350+ µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
-                <span>Very Unhealthy (250-350 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
-                <span>Unhealthy (150-250 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
-                <span>Unhealthy for Sensitive (100-150 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
-                <span>Moderate (50-100 µg/m³)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#00FF66", border: "1px solid black" }}></div>
-                <span>Good (0-50 µg/m³)</span>
-              </div>
+               <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4B0082] border-2 border-black"></div>Hazardous (350+)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#8B0000] border-2 border-black"></div>Very Unhealthy (250-350)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FF0000] border-2 border-black"></div>Unhealthy (150-250)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFA500] border-2 border-black"></div>Unhealthy Sens. (100-150)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFFF00] border-2 border-black"></div>Moderate (50-100)</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#00FF66] border-2 border-black"></div>Good (0-50)</div>
             </>
           )}
 
           {/* Generic legend for other pollutants */}
           {selectedPollutant !== 'pm25' && selectedPollutant !== 'pm10' && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#4B0082", border: "1px solid black" }}></div>
-                <span>Severe/Hazardous</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#8B0000", border: "1px solid black" }}></div>
-                <span>Very High</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FF0000", border: "1px solid black" }}></div>
-                <span>High</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFA500", border: "1px solid black" }}></div>
-                <span>Moderate High</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#FFFF00", border: "1px solid black" }}></div>
-                <span>Moderate</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "20px", height: "20px", backgroundColor: "#00FF66", border: "1px solid black" }}></div>
-                <span>Good/Low</span>
-              </div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#4B0082] border-2 border-black"></div>Severe/Hazardous</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#8B0000] border-2 border-black"></div>Very High</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FF0000] border-2 border-black"></div>High</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFA500] border-2 border-black"></div>Moderate High</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#FFFF00] border-2 border-black"></div>Moderate</div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 bg-[#00FF66] border-2 border-black"></div>Good/Low</div>
             </>
           )}
         </div>
