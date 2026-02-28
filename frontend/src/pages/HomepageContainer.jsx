@@ -17,9 +17,9 @@ const HomepageContainer = () => {
                         </a>
                     ))}
                 </div>
-                <button className="bg-[#00FF66] border-4 border-black px-6 py-2 font-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-150" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                <a href="/node" className="bg-[#00FF66] border-4 border-black px-6 py-2 font-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-150 inline-block text-center" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     LAUNCH APP
-                </button>
+                </a>
             </nav>
 
             {/* 2. Hero Section */}
@@ -51,8 +51,8 @@ const HomepageContainer = () => {
                     backgroundSize: '30px 30px'
                 }}>
                     <div className="bg-white border-4 border-black w-full max-w-md aspect-square flex items-center justify-center p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:-rotate-3 transition-transform duration-500">
-                        <div className="border-4 border-dashed border-black w-full h-full flex items-center justify-center bg-[#f0f0f0]">
-                            <p className="font-mono font-bold text-2xl text-center">3D MAP<br />PLACEHOLDER</p>
+                        <div className="border-4 border-black w-full h-full flex items-center justify-center bg-[#f0f0f0] overflow-hidden">
+                            <img src="/3d_map.png" alt="3D Isometric City Map" className="w-full h-full object-cover contrast-125 grayscale-[20%] saturate-150 mix-blend-multiply" />
                         </div>
                     </div>
                 </div>
