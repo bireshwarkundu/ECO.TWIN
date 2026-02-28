@@ -260,10 +260,31 @@ const Dashboard = () => {
                                 {allStationsData?.metadata?.successful_stations || 0}/4 STATIONS ONLINE
                             </span>
                         </div>
-                        <div className="w-full">
+                        <div className="h-[500px] w-full">
                             <MapComponent liveData={allStationsData} />
                         </div>
-
+                        <div className="bg-[#FDFBF7] border-t-4 border-black p-2 text-xs font-bold flex flex-wrap gap-4">
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-green border border-black"></div>
+                                <span>Low (0-40)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-yellow border border-black"></div>
+                                <span>Moderate (40-60)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-orange border border-black"></div>
+                                <span>High (60-80)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-red border border-black"></div>
+                                <span>Very High (80-100)</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-darkred border border-black"></div>
+                                <span>Severe (100+)</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
