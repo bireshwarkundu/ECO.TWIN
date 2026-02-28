@@ -11,8 +11,8 @@ const HomepageContainer = () => {
                     ECO.TWIN
                 </div>
                 <div className="hidden md:flex gap-6 font-mono uppercase font-bold text-lg">
-                    {['Dashboard', 'Models', 'About'].map((link) => (
-                        <a key={link} href={link === 'Models' ? "/models" : (link === 'Dashboard' ? "/dashboard" : "/about")} className="hover:bg-[#FFCC00] px-3 py-1 border-2 border-transparent hover:border-black transition-colors">
+                    {['Dashboard', 'Models', 'About', 'Settings'].map((link) => (
+                        <a key={link} href={`/${link.toLowerCase()}`} className="hover:bg-[#FFCC00] px-3 py-1 border-2 border-transparent hover:border-black transition-colors">
                             {link}
                         </a>
                     ))}
