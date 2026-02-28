@@ -260,7 +260,7 @@ const Dashboard = () => {
                                 {allStationsData?.metadata?.successful_stations || 0}/4 STATIONS ONLINE
                             </span>
                         </div>
-                        <div className="h-[500px] w-full">
+                        <div className="h-[700px] w-full">
                             <MapComponent liveData={allStationsData} />
                         </div>
                         <div className="bg-[#FDFBF7] border-t-4 border-black p-2 text-xs font-bold flex flex-wrap gap-4">

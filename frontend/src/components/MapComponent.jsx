@@ -490,7 +490,7 @@ function MapComponent({ liveData }) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full bg-[#FDFBF7] font-mono border-t-0" style={{ minHeight: "600px" }}>
+    <div className="flex flex-col lg:flex-row w-full bg-[#FDFBF7] font-mono border-t-0 " style={{ minHeight: "700px" }}>
 
       {/* Control Panel - Left Sidebar */}
       <div className="w-full lg:w-[320px] bg-white border-b-4 lg:border-b-0 lg:border-r-4 border-black p-4 flex flex-col shrink-0 overflow-y-auto z-10">
