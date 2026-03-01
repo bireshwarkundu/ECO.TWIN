@@ -7,7 +7,7 @@ import {
 import {
     AlertTriangle, ArrowUpRight, ArrowDownRight, Settings, Play, Database, Download,
     Car, TreePine, Hospital, School, Shield, Zap, Wind, Activity,
-    MapPin, TrendingDown, TrendingUp, Eye, Navigation, Leaf, ArrowLeft
+    MapPin, TrendingDown, TrendingUp, Eye, Navigation, Leaf, ArrowLeft, Clock
 } from 'lucide-react';
 import BackToHomeButton from '../components/BackToHomeButton';
 
@@ -451,17 +451,41 @@ function TrafficDivergenceSimulator() {
             }
         }
 
-        // Draw active OSRM Route
-        if (primaryRoute && activeRouteView === "primary") {
+        // Draw both OSRM Routes to allow visual comparison
+        let activeBounds = null;
+
+        if (primaryRoute) {
+            const isPrimaryActive = activeRouteView === "primary" || !alternateRoute;
+            // Normal path is red when there's an alternate (optimized) path. Otherwise green if safe, red if not.
+            const primaryColor = alternateRoute ? '#FF3366' : (primaryRoute.isSafe ? '#00FF66' : '#FF3366');
+
             osrmPolylineRef.current = L.polyline(primaryRoute.coords, {
-                color: primaryRoute.isSafe ? '#00FF66' : '#FF3366', weight: 8, opacity: 0.9, lineCap: 'square', dashArray: '5,10'
+                color: primaryColor,
+                weight: isPrimaryActive ? 8 : 4,
+                opacity: isPrimaryActive ? 0.9 : 0.5,
+                lineCap: 'square',
+                dashArray: isPrimaryActive ? '5,10' : 'none'
             }).addTo(mapInstance.current);
-            mapInstance.current.fitBounds(osrmPolylineRef.current.getBounds(), { padding: [30, 30] });
-        } else if (alternateRoute && activeRouteView === "alternate") {
+
+            if (isPrimaryActive) activeBounds = osrmPolylineRef.current.getBounds();
+        }
+
+        if (alternateRoute) {
+            const isAlternateActive = activeRouteView === "alternate";
+
             altOsrmPolylineRef.current = L.polyline(alternateRoute.coords, {
-                color: '#00CFFF', weight: 8, opacity: 0.9, lineCap: 'square', dashArray: '5,10'
+                color: '#00FF66', // Optimized path in green
+                weight: isAlternateActive ? 8 : 4,
+                opacity: isAlternateActive ? 0.9 : 0.5,
+                lineCap: 'square',
+                dashArray: isAlternateActive ? '5,10' : 'none'
             }).addTo(mapInstance.current);
-            mapInstance.current.fitBounds(altOsrmPolylineRef.current.getBounds(), { padding: [30, 30] });
+
+            if (isAlternateActive) activeBounds = altOsrmPolylineRef.current.getBounds();
+        }
+
+        if (activeBounds) {
+            mapInstance.current.fitBounds(activeBounds, { padding: [30, 30] });
         }
 
     }, [L, enrichedZones, roadGeometries, primaryRoute, alternateRoute, activeRouteView]);
@@ -564,6 +588,9 @@ function TrafficDivergenceSimulator() {
                                     }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '4px' }}>
                                             <span style={{ fontWeight: 900, fontSize: '14px' }}>SHORTEST ROUTE {primaryRoute.isSafe ? '✅' : '❌'}</span>
+                                            <span style={{ fontWeight: 900, fontSize: '11px', background: primaryRoute.isSafe ? '#00FF66' : '#FF3366', color: primaryRoute.isSafe ? '#000' : '#FFF', padding: '2px 6px', border: '2px solid #000' }}>
+                                                {primaryRoute.isSafe ? 'GREEN PATH' : 'RED PATH'}
+                                            </span>
                                         </div>
                                         <span style={{ fontSize: '12px', color: '#555', marginBottom: '6px' }}>{primaryRoute.isSafe ? 'Healthy path' : 'Shortest but polluted'}</span>
                                         <div style={{ display: 'flex', gap: '15px' }}>
@@ -590,6 +617,9 @@ function TrafficDivergenceSimulator() {
                                         }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '4px' }}>
                                                 <span style={{ fontWeight: 900, fontSize: '14px', color: '#007FFF' }}>AQI-AWARE ROUTE ✅</span>
+                                                <span style={{ fontWeight: 900, fontSize: '11px', background: '#00FF66', color: '#000', padding: '2px 6px', border: '2px solid #000' }}>
+                                                    GREEN PATH
+                                                </span>
                                             </div>
                                             <span style={{ fontSize: '12px', color: '#007FFF', marginBottom: '6px', fontWeight: 'bold' }}>Slightly longer but healthier</span>
                                             <div style={{ display: 'flex', gap: '15px' }}>
@@ -854,7 +884,11 @@ function SmartSiteAdvisor() {
         <div style={{ fontFamily: "'Space Mono','Courier New',monospace", background: '#FFF' }} className="w-full text-black">
 
             {/* ── HEADER ── */}
+<<<<<<< HEAD
+            <div style={{ background: '#000000ff', borderBottom: '4px solid #000' }} className="px-6 py-6 flex items-center justify-between flex-wrap gap-3">
+=======
             <div style={{ background: '#000', borderBottom: '4px solid #000' }} className="px-6 py-6 flex items-center justify-between flex-wrap gap-3">
+>>>>>>> a45fe967a2582b299438de059e6cd11670d021b1
                 <div>
                     <div className="flex items-center gap-4">
                         <div className="flex gap-2 bg-[#111] p-2 border-2 border-[#333]">
@@ -1099,6 +1133,14 @@ function SmartSiteAdvisor() {
                                     )
                                 })}
                             </div>
+
+                            {/* Hospital Forecaster Scroll Indicator */}
+                            {(selectedSite.type === 'hospital' || selectedSite.type === 'both') && (
+                                <div style={{ marginTop: '24px', background: '#000', border: '3px solid #00FF66', padding: '16px', textAlign: 'center', boxShadow: '6px 6px 0 #00FF66' }}>
+                                    <p style={{ color: '#00FF66', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>HOSPITAL FORECASTER ACTIVE</p>
+                                    <p style={{ color: '#FFF', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', lineHeight: '1.4' }}>SCROLL DOWN FOR 5-YEAR SUSTAINABILITY PROJECTION ↓</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1153,6 +1195,13 @@ function SmartSiteAdvisor() {
                     )}
                 </div>
             </div>
+
+            {/* INTEGRATED HOSPITAL SUSTAINABILITY FORECASTER */}
+            {(selectedSite && (selectedSite.type === 'hospital' || selectedSite.type === 'both')) && !compareMode && (
+                <div style={{ borderTop: '4px solid #000' }}>
+                    <HospitalSustainabilityForecaster siteParam={selectedSite} />
+                </div>
+            )}
         </div>
     );
 }
@@ -1496,294 +1545,299 @@ function CitizenHealthRiskDashboard() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// POLICY SANDBOX (preserved intact)
+// NEW FEATURE: HOSPITAL SUSTAINABILITY FORECASTER
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SPECIES = {
-    neem: { name: 'Neem', emoji: '🌿', color: '#2D8A50', radius: 18, pm25: -1.2, no2: -0.6, co: -0.4, o3: -0.3, pm10: -1.5, desc: 'Fast PM2.5 absorber' },
-    banyan: { name: 'Banyan', emoji: '🌳', color: '#1A5C2A', radius: 28, pm25: -2.2, no2: -1.4, co: -0.9, o3: -0.6, pm10: -2.8, desc: 'Massive canopy, best overall' },
-    palm: { name: 'Palm', emoji: '🌴', color: '#4DB87A', radius: 14, pm25: -0.6, no2: -0.4, co: -0.3, o3: -0.8, pm10: -0.8, desc: 'Best O3 reducer' },
-    bamboo: { name: 'Bamboo', emoji: '🎋', color: '#6BC48A', radius: 16, pm25: -0.9, no2: -1.2, co: -0.7, o3: -0.4, pm10: -1.1, desc: 'Top NO2 absorber' },
-};
-
-const BASELINE = { pm25: 45, pm10: 78, no2: 34, co: 0.9, o3: 28, so2: 8 };
-
-function calcAQIfn(pm25) {
-    if (pm25 <= 30) return Math.round(pm25 * 50 / 30);
-    if (pm25 <= 60) return Math.round(50 + (pm25 - 30) * 50 / 30);
-    if (pm25 <= 90) return Math.round(100 + (pm25 - 60) * 100 / 30);
-    return Math.round(200 + (pm25 - 90) * 100 / 30);
-}
-
-function aqiBgFn(aqi) {
-    if (aqi <= 50) return '#00E676';
-    if (aqi <= 100) return '#FFEE58';
-    if (aqi <= 150) return '#FFA726';
-    if (aqi <= 200) return '#EF5350';
-    return '#CE93D8';
-}
-
-function aqiWordFn(aqi) {
-    if (aqi <= 50) return 'GOOD';
-    if (aqi <= 100) return 'SATISFACTORY';
-    if (aqi <= 150) return 'MODERATE';
-    if (aqi <= 200) return 'POOR';
-    return 'VERY POOR';
-}
-
-async function isRestrictedLocation(lat, lng) {
-    const query = `[out:json][timeout:5];(way["highway"](around:15,${lat},${lng});way["building"](around:8,${lat},${lng}););out body;`;
-    try {
-        const resp = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(query) });
-        const data = await resp.json();
-        if (!data.elements || data.elements.length === 0) return { restricted: false };
-        const roads = data.elements.filter(e => e.tags?.highway);
-        const buildings = data.elements.filter(e => e.tags?.building);
-        if (buildings.length > 0) return { restricted: true, reason: 'building' };
-        if (roads.length > 0) return { restricted: true, reason: 'road' };
-        return { restricted: false };
-    } catch { return { restricted: false }; }
-}
-
-function makeTreeIcon(L, species, fresh = false) {
-    const sp = SPECIES[species];
-    const r = sp.radius;
-    const svg = `<svg width="${r * 2 + 4}" height="${r * 2 + 16}" xmlns="http://www.w3.org/2000/svg">
-      ${fresh ? `<circle cx="${r + 2}" cy="${r + 2}" r="${r + 2}" fill="rgba(255,255,100,0.5)"/>` : ''}
-      <circle cx="${r + 2}" cy="${r + 2}" r="${r}" fill="${sp.color}" stroke="#000" stroke-width="1.5"/>
-      <circle cx="${r - 2}" cy="${r - 2}" r="${r * 0.35}" fill="rgba(255,255,255,0.25)"/>
-      <rect x="${r}" y="${r * 2 + 2}" width="4" height="12" fill="#5C3D1E" rx="1"/>
-      <text x="${r + 2}" y="${r + 6}" text-anchor="middle" font-size="${r * 0.7}px">${sp.emoji}</text>
-    </svg>`;
-    return L.divIcon({ html: svg, className: '', iconSize: [r * 2 + 4, r * 2 + 16], iconAnchor: [r + 2, r * 2 + 16], popupAnchor: [0, -(r * 2 + 16)] });
-}
-
-function PolicySandboxWidget() {
-    const L = useLeaflet();
-    const mapRef = useRef(null);
-    const mapInstance = useRef(null);
-    const markersRef = useRef([]);
-    const [trees, setTrees] = useState([]);
-    const [selectedSpecies, setSelectedSpecies] = useState('neem');
-    const [mode, setMode] = useState('plant');
-    const [pollution, setPollution] = useState({ ...BASELINE, aqi: calcAQIfn(BASELINE.pm25) });
-    const [toast, setToast] = useState(null);
-    const [checking, setChecking] = useState(false);
-    const [history, setHistory] = useState([]);
-    const toastTimer = useRef(null);
-    const modeRef = useRef(mode);
-    const speciesRef = useRef(selectedSpecies);
-    const treesRef = useRef(trees);
-
-    useEffect(() => { modeRef.current = mode; }, [mode]);
-    useEffect(() => { speciesRef.current = selectedSpecies; }, [selectedSpecies]);
-    useEffect(() => { treesRef.current = trees; }, [trees]);
-
-    const recalc = useCallback((treeList) => {
-        let d = { pm25: 0, pm10: 0, no2: 0, co: 0, o3: 0 };
-        treeList.forEach(t => { const sp = SPECIES[t.species]; d.pm25 += sp.pm25; d.pm10 += sp.pm10; d.no2 += sp.no2; d.co += sp.co; d.o3 += sp.o3; });
-        const p = {
-            pm25: Math.max(2, +(BASELINE.pm25 + d.pm25).toFixed(1)),
-            pm10: Math.max(3, +(BASELINE.pm10 + d.pm10).toFixed(1)),
-            no2: Math.max(1, +(BASELINE.no2 + d.no2).toFixed(1)),
-            co: Math.max(0.01, +(BASELINE.co + d.co).toFixed(2)),
-            o3: Math.max(1, +(BASELINE.o3 + d.o3).toFixed(1)),
-            so2: BASELINE.so2,
-        };
-        p.aqi = calcAQIfn(p.pm25);
-        setPollution(p);
-    }, []);
-
-    const showToast = useCallback((msg, type = 'info') => {
-        clearTimeout(toastTimer.current);
-        setToast({ msg, type });
-        toastTimer.current = setTimeout(() => setToast(null), 2500);
-    }, []);
+function HospitalSustainabilityForecaster({ siteParam }) {
+    const hospitals = SITE_CANDIDATES.filter(s => s.type === 'hospital' || s.type === 'both');
+    const [selectedSite, setSelectedSite] = useState(siteParam || hospitals[1] || hospitals[0]);
+    const [activePolicies, setActivePolicies] = useState([]);
 
     useEffect(() => {
-        if (!L || !mapRef.current || mapInstance.current) return;
-        const map = L.map(mapRef.current, { center: [22.5839, 88.4148], zoom: 15, zoomControl: true });
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri', maxZoom: 19 }).addTo(map);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { attribution: 'CartoDB', maxZoom: 19, opacity: 0.85 }).addTo(map);
+        if (siteParam) {
+            setSelectedSite(siteParam);
+            setActivePolicies([]);
+        }
+    }, [siteParam]);
 
-        map.on('click', async (e) => {
-            if (modeRef.current !== 'plant') return;
-            const { lat, lng } = e.latlng;
-            setChecking(true);
-            showToast('Checking location...', 'info');
-            const { restricted, reason } = await isRestrictedLocation(lat, lng);
-            setChecking(false);
-            if (restricted) {
-                showToast(reason === 'road' ? 'Cannot plant on roads!' : 'Cannot plant inside a building!', 'error');
-                const circle = L.circle([lat, lng], { color: '#FF3366', fillColor: '#FF3366', fillOpacity: 0.3, radius: 8 }).addTo(map);
-                setTimeout(() => map.removeLayer(circle), 1500);
-                return;
+    const POLICIES = [
+        { id: 'v_forest', name: 'Vertical Bio-Architecture', cost: '₹12.5Cr', time: '18 Mo', impacts: { aqi: 12, green: 25, future: 10 }, desc: 'Integrate dense vegetation into the hospital facades to filter hyper-local PM2.5.' },
+        { id: 'ev_zone', name: 'Zero-Emission 1km Radius', cost: '₹2.2Cr', time: '6 Mo', impacts: { aqi: 16, traffic: 15, future: 5 }, desc: 'Ban ICE vehicles within 1km. Mandate EV ambulance fleets.' },
+        { id: 'ai_traffic', name: 'AI Priority Reroute', cost: '₹1.8Cr', time: '3 Mo', impacts: { traffic: 22, aqi: 5, future: 8 }, desc: 'Smart traffic lights that autonomously divert heavy congestion away from facility.' },
+        { id: 'tree_buffer', name: '100m Deep-Root Buffer', cost: '₹4.5Cr', time: '36 Mo', impacts: { green: 30, aqi: 14, traffic: 0 }, desc: 'Massive afforestation block separating the campus from main arterial roads.' },
+        { id: 'hvac_iso', name: 'Deep HEPA Isolation', cost: '₹28.4Cr', time: '12 Mo', impacts: { future: 22, aqi: 15, green: 0 }, desc: 'Complete indoor isolation from outdoor ambient spikes. Secures future viability.' },
+    ];
+
+    const currentScore = selectedSite ? Math.round((selectedSite.aqiScore + selectedSite.trafficScore + selectedSite.greenScore + selectedSite.futureScore) / 4) : 0;
+
+    // Simulate natural degradation over 5 years due to urban growth
+    const URBAN_DEGRADATION = 14;
+    const baseProjectedScore = currentScore - URBAN_DEGRADATION;
+
+    let bonusAqi = 0, bonusTraffic = 0, bonusGreen = 0, bonusFuture = 0;
+    activePolicies.forEach(pid => {
+        const pol = POLICIES.find(p => p.id === pid);
+        if (pol) {
+            bonusAqi += pol.impacts.aqi || 0;
+            bonusTraffic += pol.impacts.traffic || 0;
+            bonusGreen += pol.impacts.green || 0;
+            bonusFuture += pol.impacts.future || 0;
+        }
+    });
+
+    const netBonus = Math.round((bonusAqi + bonusTraffic + bonusGreen + bonusFuture) / 4);
+    const projectedFinalScore = Math.min(100, baseProjectedScore + netBonus);
+
+    const isSustainable = projectedFinalScore >= 95;
+
+    const chartData = [];
+    for (let year = 0; year <= 5; year += 0.5) {
+        const degrade = year * (URBAN_DEGRADATION / 5);
+        let currentYrBonus = 0;
+
+        activePolicies.forEach(pid => {
+            const pol = POLICIES.find(p => p.id === pid);
+            const months = parseInt(pol.time);
+            const implementYear = months / 12;
+            const polTotalBonus = ((pol.impacts.aqi || 0) + (pol.impacts.green || 0) + (pol.impacts.traffic || 0) + (pol.impacts.future || 0)) / 4;
+
+            if (year >= implementYear) {
+                currentYrBonus += polTotalBonus;
+            } else if (year > 0) {
+                currentYrBonus += (year / implementYear) * polTotalBonus;
             }
-            const sp = SPECIES[speciesRef.current];
-            const id = Date.now() + Math.random();
-            const marker = L.marker([lat, lng], { icon: makeTreeIcon(L, speciesRef.current, true) }).addTo(map).bindPopup(`
-              <div style="font-family:'Courier New',monospace;font-weight:900;min-width:160px">
-                <div style="font-size:18px;margin-bottom:4px">${sp.emoji} ${sp.name}</div>
-                <div style="font-size:11px;color:#666;margin-bottom:6px">${sp.desc}</div>
-                <div style="font-size:11px">PM2.5: <b>${sp.pm25}/day</b></div>
-                <div style="font-size:11px">NO2: <b>${sp.no2}/day</b></div>
-                <button onclick="window._sandboxErase('${id}')" style="margin-top:8px;background:#FF3366;color:white;border:2px solid black;padding:4px 8px;font-weight:900;font-size:11px;cursor:pointer;width:100%">REMOVE THIS TREE</button>
-              </div>`);
-            setTimeout(() => marker.setIcon(makeTreeIcon(L, speciesRef.current, false)), 600);
-            window._sandboxErase = (eid) => {
-                setTrees(prev => {
-                    const idx = prev.findIndex(t => String(t.id) === String(eid));
-                    if (idx === -1) return prev;
-                    map.removeLayer(prev[idx].marker);
-                    const next = prev.filter(t => String(t.id) !== String(eid));
-                    recalc(next); return next;
-                });
-                map.closePopup();
-                showToast('Tree removed', 'warn');
-            };
-            const newTree = { id, lat, lng, species: speciesRef.current, marker };
-            setTrees(prev => { setHistory(h => [...h.slice(-29), prev]); const next = [...prev, newTree]; recalc(next); return next; });
-            showToast(`${sp.emoji} ${sp.name} planted!`, 'success');
         });
 
-        mapInstance.current = map;
-        return () => { map.remove(); mapInstance.current = null; };
-    }, [L, recalc, showToast]);
-
-    useEffect(() => {
-        const container = mapInstance.current?.getContainer();
-        if (!container) return;
-        container.style.cursor = mode === 'plant' ? 'crosshair' : mode === 'erase' ? 'cell' : 'zoom-in';
-    }, [mode]);
-
-    const handleUndo = () => {
-        if (!history.length) return;
-        const prev = history[history.length - 1];
-        trees.forEach(t => { if (!prev.find(p => p.id === t.id)) mapInstance.current?.removeLayer(t.marker); });
-        setTrees(prev); treesRef.current = prev; setHistory(h => h.slice(0, -1)); recalc(prev);
-        showToast('Undone', 'info');
-    };
-
-    const handleReset = () => {
-        trees.forEach(t => mapInstance.current?.removeLayer(t.marker));
-        setTrees([]); treesRef.current = []; setHistory([]); recalc([]);
-        showToast('Map cleared', 'info');
-    };
-
-    const totalTrees = trees.length;
-    const dAQI = pollution.aqi - calcAQIfn(BASELINE.pm25);
-    const dPM25 = +(pollution.pm25 - BASELINE.pm25).toFixed(1);
-    const counts = {};
-    trees.forEach(t => { counts[t.species] = (counts[t.species] || 0) + 1; });
+        chartData.push({
+            year: `Year ${year}`,
+            score: Math.min(100, Math.round(currentScore - degrade + currentYrBonus)),
+            baseline: 95
+        });
+    }
 
     return (
-        <div style={{ fontFamily: "'Space Mono','Courier New',monospace", background: '#0A0A14' }} className="w-full text-black select-none">
-            <div style={{ background: '#FF3366', borderBottom: '6px solid #000' }} className="px-6 py-3 flex items-center justify-between flex-wrap gap-2">
-                <div>
-                    <h2 style={{ fontFamily: "'Space Mono',monospace", letterSpacing: '-1px', fontSize: '28px', fontWeight: 900, color: '#000', textTransform: 'uppercase' }}>POLICY SANDBOX</h2>
-                    <p style={{ color: '#000', fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '3px', opacity: 0.7 }}>BIDHANNAGAR · REAL MAP · LIVE POLLUTION PHYSICS</p>
+        <div style={{ fontFamily: "'Space Mono','Courier New',monospace", background: '#F4F4F0', color: '#000', position: 'relative' }}>
+            <style>
+                {`
+                @keyframes warningFlash {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.6; }
+                }
+                @keyframes crtScan {
+                    0% { transform: translateY(-200%); }
+                    100% { transform: translateY(800px); }
+                }
+                @keyframes neonPulse {
+                    0%, 100% { box-shadow: 6px 6px 0 #FF3366; }
+                    50% { box-shadow: 10px 10px 0 #FF3366; filter: brightness(1.1); }
+                }
+                `}
+            </style>
+            {/* FORECASTER HEADER */}
+            <div style={{ background: '#000', borderBottom: '6px solid #FFF' }} className="px-6 py-4 flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                    <div style={{ background: '#FF3366', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', border: '3px solid #FFF', boxShadow: '4px 4px 0 #00FF66' }}>
+                        <Hospital size={36} strokeWidth={3} />
+                    </div>
+                    <div>
+                        <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-1px', fontSize: '28px', fontWeight: 900, textTransform: 'uppercase', color: '#FFF', lineHeight: '1.2' }}>
+                            HOSPITAL 5-YEAR SUSTAINABILITY PROJECTION
+                        </h2>
+                        <p style={{ fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '2px', color: '#00FF66' }}>
+                            CLIMATE RESILIENCE · INFRASTRUCTURE PLANNING · MODELLED FOR 2031
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                    {checking && <div style={{ background: '#FFCC00', border: '3px solid #000', padding: '6px 14px', fontWeight: 900, color: '#000', fontSize: '12px', textTransform: 'uppercase' }} className="animate-pulse">CHECKING...</div>}
-                    <button onClick={handleUndo} disabled={!history.length} style={{ border: '3px solid #000', background: '#000', color: '#FFF', fontFamily: "'Space Mono',monospace", padding: '8px 16px', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', opacity: history.length ? 1 : 0.3 }}>UNDO</button>
-                    <button onClick={handleReset} style={{ border: '3px solid #000', background: '#FFCC00', color: '#000', fontFamily: "'Space Mono',monospace", padding: '8px 16px', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer' }}>RESET</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#FF3366', padding: '10px 16px', border: '3px solid #FFF', boxShadow: '4px 4px 0 #FFF' }}>
+                    <span style={{ color: '#000', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>TARGET SITE:</span>
+                    <span style={{ color: '#FFF', fontWeight: 900, fontSize: '18px', fontFamily: "'Space Mono', monospace", borderBottom: '2px dashed #FFF' }}>
+                        {selectedSite.name.toUpperCase()}
+                    </span>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', minHeight: '620px' }}>
-                <div style={{ width: '210px', minWidth: '210px', background: '#0d0d1a', borderRight: '4px solid #FF3366', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-                    <div style={{ borderBottom: '4px solid #000', padding: '12px' }}>
-                        <p style={{ color: '#FF3366', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>MODE</p>
-                        {[{ m: 'plant', label: 'PLANT', col: '#00FF66' }, { m: 'erase', label: 'POPUP ERASE', col: '#FF3366' }, { m: 'inspect', label: 'INSPECT', col: '#00CFFF' }].map(({ m, label, col }) => (
-                            <button key={m} onClick={() => setMode(m)} style={{ width: '100%', display: 'block', marginBottom: '6px', padding: '8px', border: `2px solid ${mode === m ? col : '#333'}`, background: mode === m ? col + '22' : 'transparent', color: mode === m ? col : '#666', fontFamily: "'Space Mono',monospace", textAlign: 'left', cursor: 'pointer', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>{label}</button>
-                        ))}
-                    </div>
-                    {mode === 'plant' && (
-                        <div style={{ borderBottom: '4px solid #000', padding: '12px' }}>
-                            <p style={{ color: '#00FF66', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>SPECIES</p>
-                            {Object.entries(SPECIES).map(([key, sp]) => (
-                                <button key={key} onClick={() => setSelectedSpecies(key)} style={{ width: '100%', display: 'block', marginBottom: '6px', padding: '8px', border: `2px solid ${selectedSpecies === key ? sp.color : '#333'}`, background: selectedSpecies === key ? sp.color + '33' : 'transparent', textAlign: 'left', cursor: 'pointer' }}>
-                                    <div style={{ color: selectedSpecies === key ? sp.color : '#aaa', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>{sp.emoji} {sp.name}</div>
-                                    <div style={{ color: '#555', fontSize: '13px', marginTop: '2px' }}>{sp.desc}</div>
-                                    {selectedSpecies === key && <div style={{ color: sp.color, fontSize: '13px', marginTop: '4px' }}>PM2.5 {sp.pm25} · NO2 {sp.no2}/tree</div>}
-                                </button>
-                            ))}
+            <div style={{ display: 'flex', flexWrap: 'nowrap', minHeight: '650px', alignItems: 'stretch' }}>
+
+                {/* LEFT CONFIGURATION STRIP */}
+                <div style={{ flex: '0 0 350px', borderRight: '6px solid #000', display: 'flex', flexDirection: 'column', background: '#FFF' }}>
+                    <div style={{ padding: '16px', borderBottom: '6px solid #000', background: '#FFCC00' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', color: '#000', letterSpacing: '-0.5px' }}>BASE VIABILITY</p>
+                            <p style={{ background: '#000', color: '#FFF', fontWeight: 900, border: '3px solid #000', padding: '4px 8px', fontSize: '24px', boxShadow: '3px 3px 0 #FFF' }}>
+                                {currentScore}<span style={{ fontSize: '14px', color: '#00FF66' }}>/100</span>
+                            </p>
                         </div>
-                    )}
-                    <div style={{ padding: '12px', borderBottom: '4px solid #000' }}>
-                        <p style={{ color: '#000', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>PLANTED</p>
-                        {Object.entries(SPECIES).map(([key, sp]) => (counts[key] || 0) > 0 && (
-                            <div key={key} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', alignItems: 'center' }}>
-                                <span style={{ color: '#555', fontSize: '14px' }}>{sp.emoji} {sp.name}</span>
-                                <span style={{ color: sp.color, fontWeight: 900, fontSize: '13px' }}>x{counts[key]}</span>
-                            </div>
-                        ))}
-                        {totalTrees === 0 && <p style={{ color: '#555', fontSize: '14px' }}>No trees yet</p>}
-                        {totalTrees > 0 && <div style={{ borderTop: '1px solid #333', paddingTop: '6px', marginTop: '6px', display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#555', fontSize: '14px' }}>TOTAL</span><span style={{ color: '#00FF66', fontWeight: 900 }}>{totalTrees}</span></div>}
+                        <div style={{ border: '3px solid #000', padding: '12px', background: '#000', color: '#FFF', boxShadow: '4px 4px 0 #FF3366', animation: 'neonPulse 1.5s infinite' }}>
+                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '16px', fontWeight: 900, color: '#FF3366', textTransform: 'uppercase', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '-0.5px', animation: 'warningFlash 1s infinite' }}>
+                                <AlertTriangle size={20} /> DEGRADATION WARNING
+                            </p>
+                            <p style={{ fontSize: '12px', fontWeight: 700, lineHeight: 1.4 }}>If no action is taken, urban sprawl will degrade site score by <span style={{ color: '#00CFFF', fontWeight: 900, fontSize: '13px' }}>{URBAN_DEGRADATION} points</span> over 5 years (to <span style={{ fontWeight: 900, color: '#FF3366', fontSize: '13px', background: '#FFF', padding: '0 4px' }}>{baseProjectedScore}/100</span>).</p>
+                        </div>
                     </div>
-                </div>
 
-                <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                    {toast && <div style={{ position: 'absolute', top: '14px', left: '50%', transform: 'translateX(-50%)', zIndex: 2000, pointerEvents: 'none', background: toast.type === 'success' ? '#00FF66' : toast.type === 'error' ? '#FF3366' : toast.type === 'warn' ? '#FFCC00' : '#00CFFF', color: 'black', border: '3px solid #000', padding: '10px 22px', fontFamily: "'Space Mono',monospace", fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', boxShadow: '4px 4px 0 #000', whiteSpace: 'nowrap' }}>{toast.msg}</div>}
-                    <div style={{ background: '#EEE', borderBottom: '2px solid #333', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#000', fontSize: '14px', fontWeight: 900 }}>BIDHANNAGAR MUNICIPAL AREA — SATELLITE VIEW</span>
-                        <span style={{ color: '#555', fontSize: '13px', fontWeight: 900 }}>OSM ROAD DETECTION ACTIVE</span>
-                        {mode === 'plant' && !checking && <span style={{ background: '#00FF66' + '33', color: '#00FF66', border: '1px solid #00FF66', padding: '2px 10px', fontSize: '13px', fontWeight: 900 }}>PLANTING: {SPECIES[selectedSpecies].emoji} {SPECIES[selectedSpecies].name.toUpperCase()}</span>}
-                    </div>
-                    <div ref={mapRef} style={{ flex: 1, minHeight: '560px' }} />
-                </div>
+                    <div style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
+                        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900, fontSize: '18px', textTransform: 'uppercase', marginBottom: '16px', borderBottom: '4px solid #000', display: 'inline-block', paddingBottom: '4px', letterSpacing: '-0.5px' }}>CLIMATE INTERVENTIONS</p>
 
-                <div style={{ width: '250px', minWidth: '250px', background: '#0d0d1a', borderLeft: '4px solid #FF3366', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-                    <div style={{ background: aqiBgFn(pollution.aqi), borderBottom: '6px solid #000', padding: '18px', textAlign: 'center', transition: 'background 0.5s' }}>
-                        <p style={{ color: '#000', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase' }}>LIVE AQI</p>
-                        <div style={{ fontSize: '68px', fontWeight: 900, lineHeight: 1, color: '#000', fontFamily: "'Space Mono',monospace", transition: 'all 0.3s' }}>{pollution.aqi}</div>
-                        <p style={{ color: '#000', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>{aqiWordFn(pollution.aqi)}</p>
-                        {dAQI !== 0 && <div style={{ marginTop: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', display: 'inline-block' }}><span style={{ color: '#000', fontWeight: 900, fontSize: '12px' }}>{dAQI < 0 ? `${Math.abs(dAQI)} IMPROVED` : `${dAQI} WORSENED`}</span></div>}
-                    </div>
-                    <div style={{ padding: '12px', borderBottom: '4px solid #000' }}>
-                        <p style={{ color: '#FF3366', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>POLLUTANTS</p>
-                        {[
-                            { k: 'pm25', lbl: 'PM2.5', unit: 'µg/m³', max: 100, col: '#FF3366' },
-                            { k: 'pm10', lbl: 'PM10', unit: 'µg/m³', max: 150, col: '#FF9800' },
-                            { k: 'no2', lbl: 'NO2', unit: 'ppb', max: 80, col: '#FFCC00' },
-                            { k: 'co', lbl: 'CO', unit: 'ppm', max: 3, col: '#00CFFF' },
-                            { k: 'o3', lbl: 'O3', unit: 'ppb', max: 70, col: '#00FF66' },
-                            { k: 'so2', lbl: 'SO2', unit: 'ppb', max: 30, col: '#CE93D8' },
-                        ].map(({ k, lbl, unit, max, col }) => {
-                            const val = pollution[k], base = BASELINE[k];
-                            const pct = Math.min(100, (val / max) * 100);
-                            const bPct = Math.min(100, (base / max) * 100);
-                            const d = +(val - base).toFixed(2);
+                        {POLICIES.map(pol => {
+                            const isActive = activePolicies.includes(pol.id);
                             return (
-                                <div key={k} style={{ marginBottom: '9px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                                        <span style={{ color: '#666', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>{lbl}</span>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                            <span style={{ color: col, fontWeight: 900, fontSize: '12px' }}>{val}</span>
-                                            <span style={{ color: '#333', fontSize: '12px' }}>{unit}</span>
-                                            {d !== 0 && <span style={{ color: d < 0 ? '#00FF66' : '#FF3366', fontWeight: 900, fontSize: '12px' }}>{d < 0 ? `${Math.abs(d)}` : `+${d}`}</span>}
+                                <button key={pol.id}
+                                    onClick={() => setActivePolicies(prev => isActive ? prev.filter(x => x !== pol.id) : [...prev, pol.id])}
+                                    style={{
+                                        display: 'block', width: '100%', textAlign: 'left', marginBottom: '12px', padding: '12px',
+                                        border: '3px solid #000',
+                                        background: isActive ? '#000' : '#FFF',
+                                        color: isActive ? '#FFF' : '#000',
+                                        boxShadow: isActive ? `4px 4px 0 #00FF66` : '4px 4px 0 #000',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s ease-out',
+                                        transform: isActive ? 'translate(-2px, -2px)' : 'none'
+                                    }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 900, fontSize: '15px', textTransform: 'uppercase', color: isActive ? '#00FF66' : '#000', width: '70%', lineHeight: 1.1, letterSpacing: '-0.5px' }}>{pol.name}</p>
+                                        <div style={{ background: isActive ? '#00FF66' : '#FFCC00', color: '#000', fontWeight: 900, fontSize: '11px', padding: '2px 4px', border: '2px solid #000' }}>
+                                            {pol.cost}
                                         </div>
                                     </div>
-                                    <div style={{ height: '5px', background: '#EEE', border: '1px solid #333', position: 'relative', overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', left: `${bPct}%`, top: 0, bottom: 0, width: '2px', background: '#444', zIndex: 2 }} />
-                                        <div style={{ width: `${pct}%`, height: '100%', background: col, transition: 'width 0.5s ease-out' }} />
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '10px', fontWeight: 900, border: `2px solid ${isActive ? '#FFF' : '#000'}`, padding: '2px 4px', color: isActive ? '#00CFFF' : '#000' }}>TIME: {pol.time}</span>
                                     </div>
-                                </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        {Object.entries(pol.impacts).filter(([k, v]) => v > 0).map(([k, v]) => {
+                                            const mapColor = k === 'aqi' ? '#00CFFF' : k === 'green' ? '#00FF66' : k === 'traffic' ? '#FFCC00' : '#FF00FF';
+                                            const widthPct = Math.min(100, v * 3); // Visual scaling
+                                            return (
+                                                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span style={{ fontSize: '9px', fontWeight: 900, width: '45px', textTransform: 'uppercase', color: isActive ? '#FFF' : '#000', letterSpacing: '-0.5px' }}>{k}</span>
+                                                    <div style={{ flex: 1, height: '8px', background: isActive ? '#222' : '#E0E0E0', border: '2px solid #000', display: 'flex' }}>
+                                                        <div style={{ width: `${widthPct}%`, background: mapColor, borderRight: '2px solid #000' }} />
+                                                    </div>
+                                                    <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: 900, width: '25px', textAlign: 'right', color: isActive ? mapColor : '#000' }}>+{v}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </button>
                             );
                         })}
                     </div>
-                    <div style={{ padding: '12px', flex: 1 }}>
-                        <p style={{ color: '#000', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '10px' }}>IMPACT</p>
-                        <div style={{ border: '2px solid #00FF66', padding: '10px', marginBottom: '8px' }}><p style={{ color: '#00FF66', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>Trees on Real Map</p><p style={{ color: 'white', fontWeight: 900, fontSize: '28px' }}>{totalTrees}</p></div>
-                        <div style={{ border: `2px solid ${dAQI <= 0 ? '#00FF66' : '#FF3366'}`, padding: '10px', marginBottom: '8px', transition: 'border-color 0.3s' }}><p style={{ color: dAQI <= 0 ? '#00FF66' : '#FF3366', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>AQI Change</p><p style={{ color: 'white', fontWeight: 900, fontSize: '22px' }}>{dAQI === 0 ? '—' : dAQI > 0 ? `+${dAQI}` : dAQI}</p></div>
-                        <div style={{ border: '2px solid #FF3366', padding: '10px', marginBottom: '8px' }}><p style={{ color: '#FF3366', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>PM2.5 Change</p><p style={{ color: 'white', fontWeight: 900, fontSize: '18px' }}>{dPM25 === 0 ? '—' : dPM25 > 0 ? `+${dPM25}` : dPM25} µg/m³</p></div>
-                        {totalTrees >= 5 && dAQI < 0 && <div style={{ background: '#00FF66', border: '3px solid #000', padding: '10px', boxShadow: '4px 4px 0 #000', marginTop: '10px' }}><p style={{ color: 'black', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>REAL IMPACT!</p><p style={{ color: 'black', fontSize: '14px', marginTop: '4px', fontWeight: 700 }}>{totalTrees} trees on real Bidhannagar map · AQI {Math.abs(dAQI)}pts better</p></div>}
+                </div>
+
+                {/* MAIN DASHBOARD BLOCK */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+                    <div style={{
+                        background: isSustainable ? '#00FF66' : 'repeating-linear-gradient(-45deg, #FF3366, #FF3366 15px, #000 15px, #000 30px)',
+                        borderBottom: '6px solid #000',
+                        padding: '16px 24px',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        color: '#000'
+                    }}>
+                        <div>
+                            <div style={{ background: '#000', padding: '12px 16px', border: `3px solid ${isSustainable ? '#00FF66' : '#FF3366'}`, display: 'inline-block', boxShadow: `6px 6px 0 ${isSustainable ? '#FFF' : '#FF3366'}` }}>
+                                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '16px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.5px', color: '#FFF' }}>PROJECTED 2031 COMPLIANCE</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                                    <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '32px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1, color: isSustainable ? '#00FF66' : '#FF3366' }}>
+                                        {isSustainable ? 'HOSPITAL READY' : 'CRITICAL DEFICIT'}
+                                    </h3>
+                                    {isSustainable ? <Shield size={32} fill="#00FF66" color="#000" /> : <AlertTriangle size={32} fill="#FF3366" color="#000" />}
+                                </div>
+                            </div>
+                            <br />
+                            <p style={{ fontSize: '13px', fontWeight: 900, marginTop: '16px', padding: '8px 12px', background: isSustainable ? '#000' : '#FFF', color: isSustainable ? '#00FF66' : '#FF3366', display: 'inline-block', border: `3px solid #000`, boxShadow: '4px 4px 0 #000' }}>
+                                {isSustainable ? 'SYSTEM GREEN: SITE ACTIVELY SUSTAINS HEALTH INFRASTRUCTURE.' : 'SYSTEM RED: COMMANDS AGGRESSIVE INTERVENTION.'}
+                            </p>
+                        </div>
+                        <div style={{ textAlign: 'right', background: '#FFF', border: '4px solid #000', padding: '16px', boxShadow: `6px 6px 0 #000`, minWidth: '180px' }}>
+                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '14px', fontWeight: 900, textTransform: 'uppercase' }}>ESTIMATED NET SCORE</p>
+                            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '64px', fontWeight: 900, textShadow: isSustainable ? '4px 4px 0 rgba(0,255,102,0.6), 2px 2px 0 #000' : '4px 4px 0 rgba(255,51,102,0.6), 2px 2px 0 #000', lineHeight: 0.9, marginTop: '8px', color: isSustainable ? '#000' : '#FF3366' }}>
+                                {projectedFinalScore}
+                            </p>
+                            <p style={{ fontSize: '13px', fontWeight: 900, borderTop: '3px solid #000', paddingTop: '8px', marginTop: '8px' }}>Min Threshold: <span style={{ fontSize: '14px', color: '#000', background: '#FFCC00', padding: '2px 6px' }}>95</span></p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flex: 1 }}>
+                        <div style={{ flex: '1 1 50%', background: '#FFF', padding: '16px', position: 'relative', overflow: 'hidden', borderRight: '6px solid #000' }}>
+                            {/* BRUTALIST CRT SCANLINE & GRID OVERLAY */}
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 10 }}>
+                                <div style={{ width: '100%', height: '8px', background: 'rgba(0, 0, 0, 0.1)', animation: 'crtScan 4s linear infinite', boxShadow: '0 0 10px rgba(0,0,0,0.2)' }} />
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%)', backgroundSize: '100% 4px' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '4px solid #000', paddingBottom: '8px', position: 'relative', zIndex: 20 }}>
+                                <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+                                    <TrendingUp style={{ display: 'inline', marginRight: '6px' }} size={20} />
+                                    TIME TRAJECTORY
+                                </h4>
+                            </div>
+                            <div style={{ width: '100%', height: 'calc(100% - 30px)' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 50 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#000" vertical={false} />
+                                        <XAxis dataKey="year" stroke="#000" strokeWidth={3} tick={{ fontWeight: 900, fontSize: 11 }} />
+                                        <YAxis domain={['auto', 100]} stroke="#000" strokeWidth={3} tick={{ fontWeight: 900, fontSize: 12 }} />
+                                        <Tooltip content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div style={{ background: '#FFF', border: '4px solid #000', padding: '12px', boxShadow: '6px 6px 0 #000' }}>
+                                                        <p style={{ fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</p>
+                                                        <p style={{ fontWeight: 900, fontSize: '24px', color: '#00FF66', textShadow: '2px 2px 0 #000', lineHeight: 1 }}>{payload[0].value}</p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }} />
+                                        <ReferenceArea y1={0} y2={95} fill="#FF3366" fillOpacity={0.15} />
+                                        <ReferenceArea y1={95} y2={100} fill="#00FF66" fillOpacity={0.25} />
+                                        <Line type="stepAfter" dataKey="score" stroke="#00FF66" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#000', stroke: '#00FF66' }} activeDot={{ r: 8, fill: '#FFF', stroke: '#000', strokeWidth: 3 }} />
+                                        <Line type="stepAfter" dataKey="baseline" stroke="#000" strokeWidth={2} strokeDasharray="10 10" dot={false} activeDot={false} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div style={{ position: 'absolute', bottom: '8px', left: '16px', display: 'flex', gap: '16px', zIndex: 30 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', background: '#FFF', padding: '2px 6px', border: '2px solid #000', boxShadow: '2px 2px 0 #000' }}>
+                                    <div style={{ width: '16px', height: '6px', background: '#00FF66', border: '2px solid #000' }}></div> PREDICTED
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', background: '#FFF', padding: '2px 6px', border: '2px solid #000', boxShadow: '2px 2px 0 #000' }}>
+                                    <div style={{ width: '16px', height: '6px', borderBottom: '3px dashed #000' }}></div> VIABILITY THRESHOLD
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RADAR CHART VISUALIZATION */}
+                        <div style={{ flex: '1 1 50%', background: '#F4F4F0', padding: '16px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ borderBottom: '4px solid #000', paddingBottom: '8px', marginBottom: '12px' }}>
+                                <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.5px', color: '#000' }}>
+                                    <Activity style={{ display: 'inline', marginRight: '6px' }} size={20} />
+                                    IMPACT VECTORS
+                                </h4>
+                            </div>
+                            <div style={{ flex: 1, minHeight: '200px', position: 'relative' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <RadarChart cx="50%" cy="50%" outerRadius="60%" data={[
+                                        { subject: 'AQI RESILIENCE', A: Math.min(100, (selectedSite?.aqiScore || 0) + bonusAqi), B: selectedSite?.aqiScore || 0, fullMark: 100 },
+                                        { subject: 'GREEN COVER', A: Math.min(100, (selectedSite?.greenScore || 0) + bonusGreen), B: selectedSite?.greenScore || 0, fullMark: 100 },
+                                        { subject: 'TRAFFIC FLOW', A: Math.min(100, (selectedSite?.trafficScore || 0) + bonusTraffic), B: selectedSite?.trafficScore || 0, fullMark: 100 },
+                                        { subject: 'FUTURE ZONING', A: Math.min(100, (selectedSite?.futureScore || 0) + bonusFuture), B: selectedSite?.futureScore || 0, fullMark: 100 }
+                                    ]}>
+                                        <PolarGrid stroke="#000" strokeWidth={2} />
+                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#000', fontWeight: 900, fontSize: 10, fontFamily: "'Space Mono', monospace" }} />
+                                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                        <Radar name="Baseline (Without interventions)" dataKey="B" stroke="#000" fill="#FF3366" fillOpacity={0.5} strokeWidth={2} />
+                                        <Radar name="Projected Vector (With interventions)" dataKey="A" stroke="#000" fill="#00FF66" fillOpacity={0.7} strokeWidth={3} />
+                                        <Legend wrapperStyle={{ fontFamily: "'Space Mono', monospace", fontWeight: 900, fontSize: '10px' }} align="center" verticalAlign="bottom" />
+                                        <Tooltip contentStyle={{ border: '3px solid #000', fontWeight: 900, boxShadow: '4px 4px 0 #000', background: '#FFF', color: '#000', fontFamily: "'Space Mono', monospace", textTransform: 'uppercase', fontSize: '11px' }} itemStyle={{ fontWeight: 900, color: '#000' }} />
+                                    </RadarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     );
-}
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -1911,7 +1965,7 @@ const ModelsSimulation = () => {
     const barChartData = ratiosData.length > 0 ? ratiosData : pollutantMatrix.map(p => ({ name: p.name, value: p.value }));
 
     const handleExportData = () => {
-        let csvContent = "data:text/csv;charset=utf-8,";
+        let csvContent = "";
         const futureData = forecastRaw?.future || {};
         const forecastKeys = Object.keys(futureData).filter(k => Array.isArray(futureData[k]));
         csvContent += "Minute_Offset," + forecastKeys.map(k => k.toUpperCase()).join(",") + "\n";
@@ -1923,20 +1977,29 @@ const ModelsSimulation = () => {
         }
         csvContent += "\nLive Pollutants\n";
         if (liveData && !liveData.error) Object.entries(liveData).forEach(([k, v]) => { csvContent += `${k},${v}\n`; });
-        const encodedUri = encodeURI(csvContent);
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveOrOpenBlob(blob, "bidhannagar_forecast_data.csv");
+            return;
+        }
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", "bidhannagar_forecast_data.csv");
-        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const FEATURES = [
         {
             id: 'traffic',
-            title: 'TRAFFIC DIVERGENCE SIMULATOR',
-            icon: Car,
+            title: 'AQI-AWARE ROUTING',
+            icon: Navigation,
             color: '#000',
-            bg: '#FFF',
+            bg: '#FDFCF0',
             desc: 'Real-time traffic rerouting on live Bidhannagar map with AQI impact analysis. Click zones to divert congestion.',
             stats: [
                 { label: 'Zones Monitored', value: '20', color: '#000' },
@@ -1946,15 +2009,16 @@ const ModelsSimulation = () => {
         },
         {
             id: 'sites',
-            title: 'SMART SITE ADVISOR',
+            title: 'SMART SITE ADVISOR & FORECASTER',
             icon: School,
             color: '#000',
-            bg: '#FFF',
-            desc: 'AI-powered placement scoring for schools & hospitals. Multi-factor analysis: AQI, traffic, green cover, future growth.',
+            bg: '#F0F9FF',
+            desc: 'AI-powered placement scoring for schools & hospitals + 5-Year Sustainability Projection for Hospitals.',
+
             stats: [
                 { label: 'Candidate Sites', value: '7', color: '#000' },
                 { label: 'Top Score', value: '95/100', color: '#00FF66' },
-                { label: 'Metrics Used', value: '4', color: '#000' },
+                { label: 'Forecast Range', value: '5 YRS', color: '#FF3366' },
             ]
         },
         {
@@ -1962,14 +2026,14 @@ const ModelsSimulation = () => {
             title: 'CITIZEN HEALTH RISK INDEX',
             icon: Shield,
             color: '#000',
-            bg: '#FFF',
+            bg: '#FFF0F5',
             desc: 'Per-zone health risk scoring for vulnerable populations. 24-hour simulation with emergency corridor optimization.',
             stats: [
                 { label: 'Population Groups', value: '4', color: '#000' },
                 { label: 'Risk Simulated', value: '24H', color: '#FF9800' },
                 { label: 'Emergency Routes', value: '3', color: '#00FF66' },
             ]
-        },
+        }
     ];
 
     return (
@@ -2011,15 +2075,38 @@ const ModelsSimulation = () => {
                         <div className="border-4 border-dashed border-red-400 p-6 text-center col-span-4"><p className="font-black text-red-500 text-lg uppercase">SENSOR DATA UNAVAILABLE</p><p className="text-sm text-gray-500 mt-1">Could not reach OpenAQ API. Check backend connection.</p></div>
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {pollutantMatrix.map((pol, idx) => (
-                                <div key={idx} className="border-4 border-black p-3 flex flex-col justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-gray-50">
-                                    <span className="font-black text-xs text-gray-500">{pol.name}</span>
-                                    <div className="flex items-end justify-between mt-2">
-                                        <span className="font-black text-xl">{pol.value} <span className="text-xs font-bold">{pol.unit}</span></span>
-                                        {pol.trend === 'up' ? <ArrowUpRight size={24} strokeWidth={4} className="text-[#FF3366]" /> : <ArrowDownRight size={24} strokeWidth={4} className="text-[#00FF66]" />}
+                            {pollutantMatrix.map((pol, idx) => {
+                                const limits = { 'PM2.5': 15, 'PM10': 45, 'NO2': 25, 'SO2': 15, 'O3': 50, 'CO': 4 };
+                                const actualLimit = limits[pol.name];
+                                let isSafe = true;
+                                let exceedPct = 0;
+                                if (actualLimit) {
+                                    isSafe = pol.value <= actualLimit;
+                                    const ratio = pol.value / actualLimit;
+                                    exceedPct = isSafe ? 0 : Math.round((ratio - 1) * 100);
+                                }
+                                const bgColor = actualLimit ? (isSafe ? '#00FF66' : '#FF3366') : '#F9F9F9';
+
+                                return (
+                                    <div key={idx} className="border-4 border-black p-3 flex flex-col justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" style={{ background: bgColor }}>
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex flex-col">
+                                                <span className="font-black text-xs text-black">{pol.name}</span>
+                                                {actualLimit && <span className="text-[10px] uppercase text-black font-bold">WHO: {actualLimit} {pol.unit}</span>}
+                                            </div>
+                                            {actualLimit && (
+                                                <div className="text-[9px] uppercase font-black text-black bg-white px-1 border-2 border-black">
+                                                    {isSafe ? 'SAFE' : `⚠+${exceedPct}%`}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-end justify-between mt-2">
+                                            <span className="font-black text-xl text-black">{pol.value} <span className="text-xs font-bold">{pol.unit}</span></span>
+                                            {pol.trend === 'up' ? <ArrowUpRight size={24} strokeWidth={4} className="text-[#000]" /> : <ArrowDownRight size={24} strokeWidth={4} className="text-[#000]" />}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             <div className="border-4 border-black bg-black p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center"><Database className="text-[#FFCC00]" size={32} /></div>
                         </div>
                     )}
@@ -2109,39 +2196,45 @@ const ModelsSimulation = () => {
                     <h2 className="text-3xl font-black uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                         URBAN INTELLIGENCE FEATURES
                     </h2>
-                    <p style={{ color: '#555', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '4px' }}>THREE VISIONARY TOOLS FOR A SMARTER, HEALTHIER BIDHANNAGAR</p>
+                    <p style={{ color: '#555', fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', marginTop: '4px' }}>VISIONARY TOOLS FOR A SMARTER, HEALTHIER BIDHANNAGAR</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {FEATURES.map(feature => {
                         const Icon = feature.icon;
                         const isActive = activeFeature === feature.id;
                         return (
                             <button key={feature.id} onClick={() => isActive ? setActiveFeature(null) : setActiveFeature(feature.id)}
-                                className="text-left relative"
-                                style={{ border: `4px solid ${feature.color}`, background: feature.bg, padding: '28px', boxShadow: isActive ? `0 0 0 4px #000, 12px 12px 0 ${feature.color}` : `8px 8px 0 ${feature.color}`, cursor: 'pointer', fontFamily: "'Space Mono',monospace", transition: 'all 0.1s', transform: isActive ? 'translate(-4px, -4px)' : 'none', opacity: activeFeature !== null && !isActive ? 0.6 : 1 }}
+                                className="text-left relative flex flex-col h-full items-start"
+                                style={{ border: `4px solid ${feature.color}`, background: feature.bg, padding: '24px', boxShadow: isActive ? `0 0 0 4px #000, 12px 12px 0 ${feature.color}` : `8px 8px 0 ${feature.color}`, cursor: 'pointer', fontFamily: "'Space Mono',monospace", transition: 'all 0.1s', transform: isActive ? 'translate(-4px, -4px)' : 'none', opacity: activeFeature !== null && !isActive ? 0.6 : 1 }}
                                 onMouseEnter={e => { if (isActive) return; e.currentTarget.style.transform = 'translate(-4px,-4px)'; e.currentTarget.style.boxShadow = `12px 12px 0 ${feature.color}`; e.currentTarget.style.opacity = '1'; }}
                                 onMouseLeave={e => { if (isActive) return; e.currentTarget.style.transform = 'translate(0,0)'; e.currentTarget.style.boxShadow = `8px 8px 0 ${feature.color}`; if (activeFeature !== null) e.currentTarget.style.opacity = '0.6'; }}>
-                                <Icon size={48} strokeWidth={2.5} color={feature.color} style={{ marginBottom: '16px' }} />
-                                <h3 style={{ color: feature.color, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '10px', lineHeight: 1.2 }}>{feature.title}</h3>
-                                <p style={{ color: '#555', fontSize: '14px', lineHeight: '1.8', marginBottom: '20px' }}>{feature.desc}</p>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '20px' }}>
-                                    {feature.stats.map(s => (
-                                        <div key={s.label} style={{ border: `1px solid ${s.color}44`, padding: '8px', background: '#F4F4F0' }}>
-                                            <p style={{ color: '#555', fontSize: '7px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '3px' }}>{s.label}</p>
-                                            <p style={{ color: s.color, fontSize: '16px', fontWeight: 900 }}>{s.value}</p>
-                                        </div>
-                                    ))}
+                                <div className="flex-grow flex flex-col w-full">
+                                    <Icon size={48} strokeWidth={2.5} color={feature.color} style={{ marginBottom: '16px' }} />
+                                    <h3 style={{ color: feature.color, fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.5px', marginBottom: '10px', lineHeight: 1.2 }}>{feature.title}</h3>
+                                    <p style={{ color: '#222', fontSize: '14px', lineHeight: '1.6', flexGrow: 1, marginBottom: '20px', fontWeight: 'bold' }}>{feature.desc}</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '8px', marginBottom: '24px', width: '100%' }}>
+                                        {feature.stats.map(s => (
+                                            <div key={s.label} style={{ border: `2px solid #000`, padding: '8px 6px', background: '#FFF' }}>
+                                                <p style={{ color: '#000', fontSize: '8px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px', lineHeight: 1 }}>{s.label}</p>
+                                                <p style={{ color: s.color, fontSize: '15px', fontWeight: 900, lineHeight: 1 }}>{s.value}</p>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div style={{ position: 'relative', background: feature.color, color: '#FFF', padding: '12px 16px', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', border: '3px solid #000', boxShadow: '3px 3px 0 #000', letterSpacing: '1px' }}>
-                                    {isActive ? (
-                                        <div style={{ position: 'absolute', top: '-10px', left: '-10px', background: '#FF00FF', padding: '10px 14px', border: '3px solid #000', color: '#000', boxShadow: '4px 4px 0 #000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
-                                            <Icon size={24} strokeWidth={3} color="#000" />
-                                        </div>
-                                    ) : (
-                                        <Zap size={16} strokeWidth={3} />
-                                    )}
-                                    <span style={{ marginLeft: isActive ? '50px' : '0' }}>{isActive ? 'CLOSE FEATURE' : 'LAUNCH FEATURE'}</span>
+                                <div className="mt-auto w-full">
+                                    <div style={{ position: 'relative', background: isActive ? '#000' : '#FFF', color: isActive ? '#FFF' : '#000', padding: '14px 16px', fontWeight: 900, fontSize: '13px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', border: '3px solid #000', boxShadow: '5px 5px 0 #000', letterSpacing: '1px', transition: 'all 0.2s' }}>
+                                        {isActive ? (
+                                            <div style={{ position: 'absolute', top: '-10px', left: '-10px', background: '#FF00FF', padding: '10px 14px', border: '3px solid #000', color: '#000', boxShadow: '4px 4px 0 #000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                                                <Icon size={24} strokeWidth={3} color="#000" />
+                                            </div>
+                                        ) : (
+                                            <div style={{ background: '#00CFFF', padding: '4px', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Zap size={16} strokeWidth={3} color="#000" />
+                                            </div>
+                                        )}
+                                        <span style={{ marginLeft: isActive ? '50px' : '0' }}>{isActive ? 'CLOSE FEATURE' : 'LAUNCH FEATURE'}</span>
+                                    </div>
                                 </div>
                             </button>
                         );
@@ -2157,57 +2250,55 @@ const ModelsSimulation = () => {
                 )}
             </div>
 
-            {/* POLICY SANDBOX */}
-            <PolicySandboxWidget />
+            {/* ANALYTICS */}
+            <div className="w-full pb-16">
+                <div className="bg-[#000] border-4 border-black shadow-[12px_12px_0px_0px_rgba(255,51,102,1)] p-6 md:p-12 flex flex-col relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FF3366] rounded-full mix-blend-screen filter blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#00CFFF] rounded-full mix-blend-screen filter blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none -translate-x-1/2 translate-y-1/2"></div>
 
-            {/* WHO COMPLIANCE + ANALYTICS */}
-            <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 pb-16">
-                <div className="bg-white text-black border-4 border-black shadow-[8px_8px_0px_0px_rgba(255,51,102,1)] p-8 font-mono flex flex-col">
-                    <h2 className="text-2xl font-black mb-2 border-b-4 border-black pb-2 w-max text-black uppercase">WHO COMPLIANCE BOARD</h2>
-                    <p className="text-xs font-black text-[#666] mb-6 uppercase tracking-wider">Live Bidhannagar Sensors vs World Health Organization Safe Limits</p>
-                    <div className="flex-grow space-y-4 overflow-y-auto max-h-[380px] pr-4 brutalist-scrollbar">
-                        {(() => {
-                            const limits = { 'PM2.5': 15, 'PM10': 45, 'NO2': 25, 'SO2': 15, 'O3': 50, 'CO': 4 };
-                            if (!pollutantMatrix || pollutantMatrix.length === 0) return <p className="animate-pulse text-[#FF3366] font-black uppercase text-xl">Awaiting Sensor Data...</p>;
-
-                            return pollutantMatrix.map(pol => {
-                                const limit = limits[pol.name];
-                                if (!limit) return null;
-                                const isSafe = pol.value <= limit;
-                                const ratio = pol.value / limit;
-                                const exceedPct = isSafe ? 0 : Math.round((ratio - 1) * 100);
-
-                                return (
-                                    <div key={pol.name} className="border-4 border-black p-3 flex items-center justify-between shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" style={{ background: isSafe ? '#00FF66' : '#FF3366' }}>
-                                        <div className="flex flex-col">
-                                            <span className="font-black text-xl text-black">{pol.name}</span>
-                                            <span className="text-xs uppercase text-black font-bold">Limit: {limit} {pol.unit}</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="font-black text-2xl text-black">{pol.value}</span>
-                                            <div className="text-[11px] uppercase font-black text-black mt-1 bg-white px-1 border-2 border-black block w-max ml-auto">
-                                                {isSafe ? 'SAFE' : `⚠ ${exceedPct}% EXCEED`}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            });
-                        })()}
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end mb-10 border-b-4 border-[#333] pb-6">
+                        <div>
+                            <h2 className="text-4xl md:text-6xl font-black uppercase text-white tracking-tighter" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>RESEARCH ANALYTICS</h2>
+                            <p className="text-[#00CFFF] font-bold mt-2 uppercase text-xs md:text-sm tracking-widest">REAL-TIME DATA INSIGHTS & AGGREGATION</p>
+                        </div>
                     </div>
-                </div>
 
-                <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 flex flex-col">
-                    <h2 className="text-2xl font-black uppercase mb-6 border-b-4 border-black pb-2 w-max">RESEARCH ANALYTICS</h2>
-                    {analyticsLoading ? <p className="font-bold animate-pulse uppercase text-gray-400">Loading analytics...</p> : (
-                        <div className="flex-grow space-y-4 font-bold text-lg">
-                            <div className="flex justify-between border-b-2 border-dashed border-gray-400 pb-2"><span className="text-gray-500">DOMINANT POLLUTANT:</span><span className="text-[#FF3366] font-black">{analytics?.dominant_pollutant || 'PM10'}</span></div>
-                            <div className="flex justify-between border-b-2 border-dashed border-gray-400 pb-2"><span className="text-gray-500">CURRENT RISK LEVEL:</span><span className="bg-black text-white px-2 uppercase">{analytics?.risk_level || 'HIGH'}</span></div>
-                            <div className="flex justify-between border-b-2 border-dashed border-gray-400 pb-2"><span className="text-gray-500">PEAK RISK TIME:</span><span className="uppercase">{analytics?.peak_time || '19:00'}</span></div>
-                            <div className="flex justify-between border-b-2 border-dashed border-gray-400 pb-2"><span className="text-gray-500">SEASONAL TREND:</span><span className="text-[#7B61FF] font-black uppercase">{analytics?.season || 'Entering Winter Smog Phase'}</span></div>
+                    {analyticsLoading ? (
+                        <div className="flex justify-center items-center py-16 relative z-10">
+                            <p className="font-bold animate-pulse uppercase text-[#FF3366] text-2xl tracking-widest">Compiling analytics snapshot...</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                            <div className="bg-white border-4 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.2)] hover:-translate-y-2 hover:shadow-[12px_12px_0px_0px_rgba(255,51,102,1)] transition-all duration-300">
+                                <Activity className="text-[#FF3366] mb-6" size={48} strokeWidth={2.5} />
+                                <p className="text-black font-bold text-xs uppercase tracking-widest mb-1 opacity-60">DOMINANT POLLUTANT</p>
+                                <p className="text-4xl md:text-5xl font-black text-black">{analytics?.dominant_pollutant || 'PM10'}</p>
+                            </div>
+
+                            <div className="bg-[#FFCC00] border-4 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.2)] hover:-translate-y-2 hover:shadow-[12px_12px_0px_0px_rgba(0,255,102,1)] transition-all duration-300">
+                                <AlertTriangle className="text-black mb-6" size={48} strokeWidth={2.5} />
+                                <p className="text-black font-bold text-xs uppercase tracking-widest mb-1 opacity-70">CURRENT RISK LEVEL</p>
+                                <p className="text-4xl md:text-5xl font-black text-black uppercase">{analytics?.risk_level || 'HIGH'}</p>
+                            </div>
+
+                            <div className="bg-[#00CFFF] border-4 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.2)] hover:-translate-y-2 hover:shadow-[12px_12px_0px_0px_rgba(255,204,0,1)] transition-all duration-300">
+                                <Clock className="text-black mb-6" size={48} strokeWidth={2.5} />
+                                <p className="text-black font-bold text-xs uppercase tracking-widest mb-1 opacity-70">PEAK RISK TIME</p>
+                                <p className="text-4xl md:text-5xl font-black text-black uppercase">{analytics?.peak_time || '19:00'}</p>
+                            </div>
+
+                            <div className="bg-[#FFF0F5] border-4 border-black p-6 md:p-8 shadow-[6px_6px_0px_0px_rgba(255,255,255,0.2)] hover:-translate-y-2 hover:shadow-[12px_12px_0px_0px_rgba(123,97,255,1)] transition-all duration-300 flex flex-col justify-between">
+                                <TrendingUp className="text-[#FF3366] mb-6" size={48} strokeWidth={2.5} />
+                                <div>
+                                    <p className="text-black font-bold text-xs uppercase tracking-widest mb-1 opacity-60">SEASONAL TREND</p>
+                                    <p className="text-xl md:text-2xl font-black text-black uppercase leading-tight tracking-tight">{analytics?.season || 'Late Winter - Improving'}</p>
+                                </div>
+                            </div>
                         </div>
                     )}
-                    <button onClick={handleExportData} className="bg-[#00CFFF] border-4 border-black w-full py-4 text-2xl font-black uppercase flex items-center justify-center gap-3 mt-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                        <Download size={28} strokeWidth={3} /> EXPORT DATA (CSV)
+
+                    <button onClick={handleExportData} className="relative z-10 bg-[#FF3366] text-white hover:bg-white hover:text-black border-4 border-black w-full py-5 md:py-6 text-xl md:text-3xl font-black uppercase flex items-center justify-center gap-4 mt-12 shadow-[8px_8px_0px_0px_rgba(0,207,255,1)] hover:shadow-[12px_12px_0px_0px_rgba(255,204,0,1)] hover:-translate-y-1 transition-all duration-200 cursor-pointer" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                        <Download size={36} strokeWidth={3} /> EXPORT COMPILED DATA (CSV)
                     </button>
                 </div>
             </div>
