@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Wallet, Activity, MapPin, Database, Server, Cpu, CheckCircle, Clock, Wind, AlertTriangle, Thermometer, ShieldCheck, Droplets, Zap, ExternalLink, RefreshCw, History, Image, FileText } from 'lucide-react';
 import { getCalibratedAirData } from '../utils/fetchEnvironmentalData.js';
 import { ethers } from 'ethers';
@@ -13,6 +14,7 @@ const UserDashboard = () => {
     const [walletAddress, setWalletAddress] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
     const [chainId, setChainId] = useState(null);
+    const navigate = useNavigate();
     
     // Blockchain states
     const [provider, setProvider] = useState(null);
@@ -573,7 +575,7 @@ const UserDashboard = () => {
                             </button>
                         )}
                     </div>
-                    <span className="bg-[#FFE600] border-4 border-black px-4 py-2 text-2xl font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <span className="bg-[#FFE600] border-4 border-black px-4 py-2 text-2xl font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" onClick={(()=>{navigate('/')})} style={{ cursor: 'pointer' }}>
                         ECO.PULSE
                     </span>
                 </div>
@@ -588,7 +590,7 @@ const UserDashboard = () => {
             </nav>
 
             <div className="max-w-7xl mx-auto p-4 md:p-8">
-                <h1 className="text-5xl font-black mb-8 border-b-4 border-black pb-4 uppercase">MINER PROFILE</h1>
+                <h1 className="text-5xl font-black mb-8 border-b-4 border-black pb-4 uppercase">MY PROFILE</h1>
 
                 {/* MAIN ACTION AREA */}
                 <div className="bg-[#FFE600] border-4 border-black p-8 mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row gap-8">
