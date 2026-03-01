@@ -2,71 +2,72 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EcoNexus is ERC721URIStorage {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+contract EcoNexus is ERC721URIStorage, Ownable {
+    // Counter for Token IDs (starts at 0)
+    uint256 private _nextTokenId;
 
-    // 1. STATE VARIABLES
+    // --- 1. STATE VARIABLES ---
+    
+    // Rewards Balance: User Address -> ECO Amount
     mapping(address => uint256) public ecoBalance;
-    mapping(address => uint256) public lastMintTime;
     
-    // The "Tunable" Cooldown (Starts at 60 seconds)
-    uint256 public cooldownPeriod = 60; 
+    // User History: User Address -> Array of their Token IDs
+    mapping(address => uint256[]) public userContributions; 
 
-    // The Boss (You)
-    address public owner;
+    // --- 2. EVENTS ---
+    // FIXED: Removed lat, lon, and aqi. Only tracking ID, User, URI, and Reward.
+    event DataMinted(
+        uint256 indexed tokenId, 
+        address indexed miner, 
+        string tokenURI, 
+        uint256 reward
+    );
 
-    // 2. EVENTS
-    event DataMinted(uint256 indexed tokenId, address indexed miner, int256 lat, int256 lon, uint256 aqi, string ipfsHash);
-    event CooldownChanged(uint256 newTime);
+    // Constructor
+    constructor() ERC721("EcoPulse Data", "PULSE") Ownable() {}
 
-    // 3. MODIFIER (Security)
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only the Owner can do this!");
-        _;
-    }
-
-    constructor() ERC721("EcoPulse Data", "PULSE") {
-        owner = msg.sender; // You become the owner when you deploy
-    }
-
-    // 4. THE GOVERNANCE FUNCTION (Change time in future)
-    // Pass time in seconds (e.g., 3600 for 1 hour)
-    function setCooldown(uint256 _newSeconds) public onlyOwner {
-        cooldownPeriod = _newSeconds;
-        emit CooldownChanged(_newSeconds);
-    }
-
-    // 5. THE MAIN FUNCTION
-    function submitData(int256 _lat, int256 _lon, uint256 _aqi, string memory _tokenURI) 
+    // --- 3. CORE FUNCTION: MINTING ---
+    // FIXED: Removed lat, lon, aqi arguments.
+    function submitData(
+        address _user,  
+        string memory _tokenURI
+    ) 
         public 
-        returns (uint256)
+        onlyOwner 
+        returns (uint256) 
     {
-        // Check the dynamic cooldown
-        require(block.timestamp >= lastMintTime[msg.sender] + cooldownPeriod, "Cooldown active: Please wait!");
+        uint256 tokenId = _nextTokenId;
+        _nextTokenId++;
 
-        _tokenIds.increment();
-        uint256 newItemId = _tokenIds.current();
+        // A. Mint the NFT to the user
+        _mint(_user, tokenId);
+        _setTokenURI(tokenId, _tokenURI);
 
-        _mint(msg.sender, newItemId);
-        _setTokenURI(newItemId, _tokenURI);
+        // B. Add Rewards (10 ECO per mint)
+        ecoBalance[_user] += 10;
 
-        ecoBalance[msg.sender] += 10;
-        lastMintTime[msg.sender] = block.timestamp;
+        // C. Record this ID in the user's personal list
+        userContributions[_user].push(tokenId);
 
-        emit DataMinted(newItemId, msg.sender, _lat, _lon, _aqi, _tokenURI);
+        // D. Emit Event (Simplified)
+        emit DataMinted(tokenId, _user, _tokenURI, 10);
 
-        return newItemId;
+        return tokenId;
     }
-    
-    // Helper for Frontend
-    function getTimeUntilNextMint(address _user) public view returns (uint256) {
-        if (block.timestamp >= lastMintTime[_user] + cooldownPeriod) {
-            return 0;
-        } else {
-            return (lastMintTime[_user] + cooldownPeriod) - block.timestamp;
-        }
+
+    // --- 4. VIEW FUNCTIONS ---
+
+    function getUserTokenIds(address _user) public view returns (uint256[] memory) {
+        return userContributions[_user];
+    }
+
+    function getTotalMinted() public view returns (uint256) {
+        return _nextTokenId;
+    }
+
+    function getBalance(address _user) public view returns (uint256) {
+        return ecoBalance[_user];
     }
 }
