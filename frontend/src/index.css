@@ -27,4 +27,21 @@
     -webkit-text-stroke: 2px black;
     color: white;
   }
+
+  /* Neo-Brutalist Scrollbar */
+  .brutalist-scrollbar::-webkit-scrollbar {
+    width: 14px;
+  }
+  .brutalist-scrollbar::-webkit-scrollbar-track {
+    background: #FFF;
+    border-left: 4px solid #000;
+  }
+  .brutalist-scrollbar::-webkit-scrollbar-thumb {
+    background: #000;
+    border: 3px solid #FFF;
+  }
+  .brutalist-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #FF3366;
+    border-color: #000;
+  }
 }
