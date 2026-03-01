@@ -884,11 +884,7 @@ function SmartSiteAdvisor() {
         <div style={{ fontFamily: "'Space Mono','Courier New',monospace", background: '#FFF' }} className="w-full text-black">
 
             {/* ── HEADER ── */}
-<<<<<<< HEAD
-            <div style={{ background: '#000000ff', borderBottom: '4px solid #000' }} className="px-6 py-6 flex items-center justify-between flex-wrap gap-3">
-=======
             <div style={{ background: '#000', borderBottom: '4px solid #000' }} className="px-6 py-6 flex items-center justify-between flex-wrap gap-3">
->>>>>>> a45fe967a2582b299438de059e6cd11670d021b1
                 <div>
                     <div className="flex items-center gap-4">
                         <div className="flex gap-2 bg-[#111] p-2 border-2 border-[#333]">

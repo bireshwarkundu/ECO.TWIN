@@ -66,7 +66,7 @@ const DailyCalendarChart = () => {
         try {
             setLoading(true);
             // Fetch data for selected parameter
-            const response = await fetch(`http://localhost:3000/api/histanalytics/daily-summary?param=${selectedParam}`);
+            const response = await fetch(`${import.meta.env.VITE_SERVER1_URL}/api/histanalytics/daily-summary?param=${selectedParam}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
