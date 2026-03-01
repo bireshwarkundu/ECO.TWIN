@@ -439,7 +439,7 @@ const UserDashboard = () => {
         setLogs(prev => [...prev, "> 🛡️ Initiating Consensus Protocol...", "> Contacting Validator Node..."]);
 
         try {
-            const response = await fetch('http://localhost:3000/api/user/verify', {
+            const response = await fetch(`${import.meta.env.VITE_SERVER1_URL}/api/user/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -503,7 +503,7 @@ const UserDashboard = () => {
                 }
             };
 
-            const response = await fetch('http://localhost:3000/api/user/mint', {
+            const response = await fetch(`${import.meta.env.VITE_SERVER1_URL}/api/user/mint`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(mintData)
