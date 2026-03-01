@@ -222,9 +222,6 @@ const mintReward = async (req, res) => {
         // STEP 6: SEND TRANSACTION
         const tx = await contract.submitData(
             userAddress,
-            latInt,
-            lonInt,
-            aqi,
             tokenURI
         );
 
@@ -267,6 +264,7 @@ const mintReward = async (req, res) => {
         });
 
         console.log("✅ Minting complete!");
+        console.log(`${CONTRACT_ADDRESS} check`)
 
     } catch (error) {
         console.error("❌ Minting Error:", error);

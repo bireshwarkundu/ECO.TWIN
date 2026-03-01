@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Activity, MapPin, Database, Server, Cpu, CheckCircle, Clock, Wind, AlertTriangle, Thermometer, ShieldCheck, Droplets, Zap, ExternalLink, RefreshCw } from 'lucide-react';
+import { Wallet, Activity, MapPin, Database, Server, Cpu, CheckCircle, Clock, Wind, AlertTriangle, Thermometer, ShieldCheck, Droplets, Zap, ExternalLink, RefreshCw, History, Image, FileText } from 'lucide-react';
 import { getCalibratedAirData } from '../utils/fetchEnvironmentalData.js';
 import { ethers } from 'ethers';
 
@@ -32,9 +32,18 @@ const UserDashboard = () => {
     const [isMinting, setIsMinting] = useState(false);
     const [mintResult, setMintResult] = useState(null);
     const [signature, setSignature] = useState(null);
+    
+    // History States
+    const [userTokenIds, setUserTokenIds] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [selectedTokenMetadata, setSelectedTokenMetadata] = useState(null);
+    const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
 
     // Contract configuration
     const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x2af355903755f17611C900e817a4a681E6883016";
+    
+    // Pinata gateway URL
+    const PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 
     // Initialize provider and contract when wallet connects
     useEffect(() => {
@@ -50,6 +59,7 @@ const UserDashboard = () => {
                     
                     // Fetch contract data
                     await fetchContractData(ecoContract, walletAddress);
+                    await fetchUserHistory(ecoContract, walletAddress);
                     
                     setLogs(prev => [...prev, "> ✅ Blockchain connection established"]);
                 } catch (error) {
@@ -62,7 +72,7 @@ const UserDashboard = () => {
         }
     }, [walletAddress]);
 
-    // Fetch all contract data - UPDATED: removed cooldown
+    // Fetch all contract data
     const fetchContractData = async (contractInstance, address) => {
         if (!contractInstance || !address) return;
         
@@ -84,10 +94,91 @@ const UserDashboard = () => {
         }
     };
 
+    // Fetch user's token IDs history
+    const fetchUserHistory = async (contractInstance, address) => {
+        if (!contractInstance || !address) return;
+        
+        try {
+            setIsLoadingHistory(true);
+            
+            // Get user's token IDs from contract
+            const tokenIds = await contractInstance.getUserTokenIds(address);
+            
+            // Convert BigInt to Number
+            const ids = tokenIds.map(id => Number(id.toString()));
+            setUserTokenIds(ids);
+            
+            setLogs(prev => [...prev, 
+                `> 📜 Found ${ids.length} contributions in history`,
+            ]);
+        } catch (error) {
+            console.error("Error fetching user history:", error);
+            setLogs(prev => [...prev, "> ❌ Failed to fetch contribution history"]);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    // NEW: Fetch token metadata from Pinata IPFS
+    const fetchTokenMetadata = async (tokenId) => {
+        if (!contract) return;
+        
+        try {
+            setIsLoadingMetadata(true);
+            setSelectedTokenMetadata(null);
+            
+            // Get token URI from contract
+            const tokenURI = await contract.tokenURI(tokenId);
+            console.log("Token URI:", tokenURI);
+            
+            // Extract IPFS hash from URI (handles both ipfs:// and https:// formats)
+            let ipfsHash = tokenURI;
+            if (tokenURI.startsWith('ipfs://')) {
+                ipfsHash = tokenURI.replace('ipfs://', '');
+            } else if (tokenURI.includes('/ipfs/')) {
+                // Handle case where it might already be a gateway URL
+                ipfsHash = tokenURI.split('/ipfs/')[1];
+            }
+            
+            // Create Pinata gateway URL
+            const gatewayUrl = `${PINATA_GATEWAY}${ipfsHash}`;
+            
+            // Fetch metadata from Pinata
+            const response = await fetch(gatewayUrl);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch metadata: ${response.status}`);
+            }
+            
+            const metadata = await response.json();
+            
+            setSelectedTokenMetadata({
+                tokenId,
+                tokenURI,
+                ipfsHash,
+                gatewayUrl,
+                metadata
+            });
+            
+            setLogs(prev => [...prev, `> 🔍 Loaded metadata for Token #${tokenId} from Pinata`]);
+        } catch (error) {
+            console.error("Error fetching token metadata:", error);
+            setLogs(prev => [...prev, `> ❌ Failed to fetch metadata for Token #${tokenId}`]);
+        } finally {
+            setIsLoadingMetadata(false);
+        }
+    };
+
+    // Helper function to get Pinata gateway URL
+    const getPinataUrl = (ipfsHash) => {
+        return `${PINATA_GATEWAY}${ipfsHash}`;
+    };
+
     // Refresh data manually
     const refreshData = async () => {
         if (contract && walletAddress) {
             await fetchContractData(contract, walletAddress);
+            await fetchUserHistory(contract, walletAddress);
         }
     };
 
@@ -134,6 +225,7 @@ const UserDashboard = () => {
                 137: "Polygon Mainnet",
                 80001: "Polygon Mumbai",
                 11155111: "Sepolia",
+                1337 : "Ganache",
             };
 
             setLogs(prev => [
@@ -172,6 +264,8 @@ const UserDashboard = () => {
                     setBalance(0);
                     setContract(null);
                     setProvider(null);
+                    setUserTokenIds([]);
+                    setSelectedTokenMetadata(null);
                     setLogs(prev => [...prev, "> 🔒 Wallet disconnected"]);
                 } else if (accounts[0] !== walletAddress) {
                     setWalletAddress(accounts[0]);
@@ -179,6 +273,7 @@ const UserDashboard = () => {
                     
                     if (contract) {
                         await fetchContractData(contract, accounts[0]);
+                        await fetchUserHistory(contract, accounts[0]);
                     }
                 }
             };
@@ -266,7 +361,7 @@ const UserDashboard = () => {
         }
     };
 
-    // 2. Fetch Data - UPDATED: removed cooldown check
+    // 2. Fetch Data
     const toggleMining = async () => {
         if (isMining) {
             resetSession();
@@ -375,7 +470,7 @@ const UserDashboard = () => {
         }
     };
 
-    // 4. Mint NFT - UPDATED: removed cooldown check
+    // 4. Mint NFT
     const handleMint = async () => {
         if (!sensorData || !location || !walletAddress) {
             alert("Please connect wallet and verify data first");
@@ -419,9 +514,10 @@ const UserDashboard = () => {
             if (result.success) {
                 setMintResult(result);
                 
-                // Refresh balance from blockchain
+                // Refresh balance and history from blockchain
                 if (contract) {
                     await fetchContractData(contract, walletAddress);
+                    await fetchUserHistory(contract, walletAddress);
                 }
                 
                 setLogs(prev => [...prev, 
@@ -558,7 +654,7 @@ const UserDashboard = () => {
                             </div>
                         )}
 
-                        {/* STEP 3: MINT REWARD - UPDATED: removed cooldown */}
+                        {/* STEP 3: MINT REWARD */}
                         {verificationResult === 'success' && !mintResult && (
                             <div className="bg-[#00FF66] border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in zoom-in duration-300">
                                 <p className="font-bold mb-2 flex items-center gap-2">
@@ -660,6 +756,149 @@ const UserDashboard = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* CONTRIBUTION HISTORY SECTION - UPDATED FOR PINATA */}
+                {walletAddress && (
+                    <div className="mb-12">
+                        <h3 className="text-3xl font-black mb-6 uppercase inline-flex items-center gap-3 bg-white border-4 border-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                            <History size={28} /> MY CONTRIBUTION HISTORY
+                            {!isLoadingHistory && (
+                                <span className="text-sm bg-black text-white px-2 py-1 ml-4">
+                                    Total: {userTokenIds.length} NFTs
+                                </span>
+                            )}
+                        </h3>
+
+                        {/* Token IDs Grid */}
+                        {isLoadingHistory ? (
+                            <div className="bg-white border-4 border-black p-8 text-center">
+                                <div className="animate-pulse flex flex-col items-center">
+                                    <div className="w-12 h-12 bg-gray-300 border-2 border-black mb-4"></div>
+                                    <p className="font-bold">Loading contribution history...</p>
+                                </div>
+                            </div>
+                        ) : userTokenIds.length === 0 ? (
+                            <div className="bg-white border-4 border-black p-8 text-center">
+                                <Image size={48} className="mx-auto mb-4 text-gray-400" />
+                                <p className="text-xl font-bold mb-2">No contributions yet</p>
+                                <p className="text-gray-600">Start mining to create your first NFT!</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                {userTokenIds.map((tokenId) => (
+                                    <button
+                                        key={tokenId}
+                                        onClick={() => fetchTokenMetadata(tokenId)}
+                                        className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all group text-left"
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-black text-xl bg-black text-white px-2 py-1">
+                                                #{tokenId}
+                                            </span>
+                                            <FileText size={16} className="text-gray-400 group-hover:text-[#00FF66] transition-colors" />
+                                        </div>
+                                        <p className="text-xs font-bold text-gray-500">Click to view</p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Selected Token Metadata Display - UPDATED FOR PINATA */}
+                        {selectedTokenMetadata && (
+                            <div className="mt-8 bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-2xl font-black flex items-center gap-2">
+                                        <Database size={24} />
+                                        Token #{selectedTokenMetadata.tokenId} Details
+                                    </h4>
+                                    <button
+                                        onClick={() => setSelectedTokenMetadata(null)}
+                                        className="bg-[#FF3366] text-white border-2 border-black px-3 py-1 font-bold hover:bg-[#E62E5C] transition-colors"
+                                    >
+                                        CLOSE
+                                    </button>
+                                </div>
+
+                                {isLoadingMetadata ? (
+                                    <div className="animate-pulse">
+                                        <div className="h-4 bg-gray-300 border-2 border-black w-3/4 mb-4"></div>
+                                        <div className="h-4 bg-gray-300 border-2 border-black w-1/2 mb-4"></div>
+                                        <div className="h-4 bg-gray-300 border-2 border-black w-2/3"></div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Left Column - Basic Info */}
+                                        <div>
+                                            <h5 className="font-bold text-lg mb-2 border-b-2 border-black pb-1">Basic Info</h5>
+                                            <p className="mb-2">
+                                                <span className="font-bold">Name:</span> {selectedTokenMetadata.metadata.name}
+                                            </p>
+                                            <p className="mb-2">
+                                                <span className="font-bold">Description:</span> {selectedTokenMetadata.metadata.description}
+                                            </p>
+                                            <p className="mb-2">
+                                                <span className="font-bold">IPFS Hash:</span>{' '}
+                                                <span className="font-mono text-sm">{selectedTokenMetadata.ipfsHash}</span>
+                                            </p>
+                                            <p className="mb-2">
+                                                <span className="font-bold">Metadata URL:</span>{' '}
+                                                <a 
+                                                    href={selectedTokenMetadata.gatewayUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-[#0055FF] underline hover:text-[#0044CC] inline-flex items-center gap-1"
+                                                >
+                                                    View on Pinata <ExternalLink size={12} />
+                                                </a>
+                                            </p>
+                                        </div>
+
+                                        {/* Right Column - Attributes */}
+                                        <div>
+                                            <h5 className="font-bold text-lg mb-2 border-b-2 border-black pb-1">Environmental Data</h5>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {selectedTokenMetadata.metadata.attributes && selectedTokenMetadata.metadata.attributes.map((attr, index) => (
+                                                    <div key={index} className="bg-[#F4F4F0] border-2 border-black p-2">
+                                                        <p className="text-xs font-bold text-gray-600">{attr.trait_type}</p>
+                                                        <p className="font-black">{attr.value} {attr.unit || ''}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* External Links */}
+                                <div className="flex gap-3 mt-6 pt-4 border-t-2 border-black">
+                                    <a
+                                        href={`https://testnets.opensea.io/assets/amoy/${CONTRACT_ADDRESS}/${selectedTokenMetadata.tokenId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-[#7B61FF] text-white border-2 border-black px-4 py-2 font-bold hover:bg-[#6a4df4] transition-colors inline-flex items-center gap-2"
+                                    >
+                                        View on OpenSea <ExternalLink size={14} />
+                                    </a>
+                                    <a
+                                        href={`https://amoy.polygonscan.com/token/${CONTRACT_ADDRESS}?a=${selectedTokenMetadata.tokenId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-white border-2 border-black px-4 py-2 font-bold hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
+                                    >
+                                        View on Explorer <ExternalLink size={14} />
+                                    </a>
+                                    <a
+                                        href={selectedTokenMetadata?.gatewayUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-[#00FF66] border-2 border-black px-4 py-2 font-bold hover:bg-[#00E65C] transition-colors inline-flex items-center gap-2"
+                                    >
+                                        View on Pinata <ExternalLink size={14} />
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* SENSOR DATA GRID */}
                 {sensorData && (

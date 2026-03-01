@@ -13,6 +13,5 @@ module.exports = async function (deployer, network, accounts) {
   console.log("Contract Address:", econexus.address);
   console.log("Deployer (Owner):", accounts[0]);
   console.log("Network:", network);
-  console.log("Initial Cooldown Period:", (await econexus.cooldownPeriod()).toString(), "seconds");
   console.log("=========================================");
 };
