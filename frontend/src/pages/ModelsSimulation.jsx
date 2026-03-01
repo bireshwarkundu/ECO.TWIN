@@ -495,7 +495,7 @@ function TrafficDivergenceSimulator() {
                                 color: selectedTimeMode === mode ? '#000' : '#00FF66',
                                 padding: '10px 16px', fontWeight: 900, fontSize: '14px',
                                 textTransform: 'uppercase', cursor: 'pointer', fontFamily: "'Space Mono',monospace",
-                                boxShadow: selectedTimeMode === mode ? '4px 4px 0 #FFF' : 'none'
+                                boxShadow: selectedTimeMode === mode ? '4px 4px 0 #FFF' : '4px 4px 0 #00FF66'
                             }}>
                             {mode}
                         </button>
@@ -854,7 +854,7 @@ function SmartSiteAdvisor() {
         <div style={{ fontFamily: "'Space Mono','Courier New',monospace", background: '#FFF' }} className="w-full text-black">
 
             {/* ── HEADER ── */}
-            <div style={{ background: '#ff0000ff', borderBottom: '4px solid #000' }} className="px-6 py-6 flex items-center justify-between flex-wrap gap-3">
+            <div style={{ background: '#000', borderBottom: '4px solid #000' }} className="px-6 py-6 flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <div className="flex items-center gap-4">
                         <div className="flex gap-2 bg-[#111] p-2 border-2 border-[#333]">
@@ -878,13 +878,13 @@ function SmartSiteAdvisor() {
                                 border: '3px solid #00CFFF', background: siteType === t ? '#00CFFF' : '#000',
                                 color: siteType === t ? '#000' : '#00CFFF', fontFamily: "'Space Mono',monospace",
                                 padding: '10px 16px', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer',
-                                boxShadow: siteType === t ? '4px 4px 0 #FFF' : 'none'
+                                boxShadow: siteType === t ? '4px 4px 0 #FFF' : '4px 4px 0 #00CFFF'
                             }}>
                             {t === 'both' ? 'ALL SITES' : t === 'school' ? 'SCHOOLS' : 'HOSPITALS'}
                         </button>
                     ))}
                     <button onClick={() => { setCompareMode(m => !m); if (compareMode) setComparedSites([]); }}
-                        style={{ border: '3px solid #FF3366', background: compareMode ? '#FF3366' : '#000', color: compareMode ? '#000' : '#FF3366', fontFamily: "'Space Mono',monospace", padding: '10px 16px', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: compareMode ? '4px 4px 0 #FFF' : 'none', marginLeft: '12px' }}>
+                        style={{ border: '3px solid #FF3366', background: compareMode ? '#FF3366' : '#000', color: compareMode ? '#000' : '#FF3366', fontFamily: "'Space Mono',monospace", padding: '10px 16px', fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: compareMode ? '4px 4px 0 #FFF' : '4px 4px 0 #FF3366', marginLeft: '12px' }}>
                         {compareMode ? 'COMPARE: ON' : 'COMPARE SITES'}
                     </button>
                 </div>
@@ -1249,7 +1249,7 @@ function CitizenHealthRiskDashboard() {
                                 color: viewMode === m ? '#000' : '#FF3366',
                                 padding: '10px 16px', fontWeight: 900, fontSize: '14px',
                                 textTransform: 'uppercase', cursor: 'pointer', fontFamily: "'Space Mono',monospace",
-                                boxShadow: viewMode === m ? '4px 4px 0 #FFF' : 'none'
+                                boxShadow: viewMode === m ? '4px 4px 0 #FFF' : '4px 4px 0 #FF3366'
                             }}>
                             {m === 'grid' ? 'GRID' : m === 'radar' ? 'RADAR' : 'TIMELINE'}
                         </button>
