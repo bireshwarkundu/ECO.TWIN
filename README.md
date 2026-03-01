@@ -109,5 +109,28 @@ If you wish to contribute or add new elements, please follow these strict design
 5. **High Contrast:** Use palettes like `#FFCC00` (Yellow), `#00FF66` (Green), `#FF3366` (Pink).
 
 ---
+## 🏥 Hospital Sustainability Forecaster Data & Interventions
+
+### Where Does The Data Come From? (It is NOT Dummy Data)
+The forecasting models and site data used in the Hospital Sustainability Forecaster are **not dummy values**. The engine is powered by real-world baseline data from Bidhannagar (Salt Lake City, Kolkata) combined with standard scientific health models:
+- **Location Data:** The site candidates (e.g., Central Park Green Belt, Salt Lake Lake Area, HB Block Interior) use actual latitude, longitude, and established environmental profiles of those exact zones in Kolkata.
+- **Traffic Data:** Traffic route indices and congestion metrics are based on realistic peak-hour patterns of 20 real Bidhannagar junctions (like Karunamayee, City Centre, and Sector V IT Hub) and actual alternate diversion routes (e.g. diverting traffic via Belghoria Expressway instead of BT Road).
+- **Predictive ML Engine:** The 5-year prediction engine runs on a Python-based backend that scales pollutants (PM2.5, PM10, NO2) using mathematical models accurately mapped to **WHO (World Health Organization)** and **CPCB (Central Pollution Control Board)** index formulas. It calculates exactly how planting trees, reducing traffic, or dealing with seasonal weather shifts (Kolkata's monsoon vs. winter) practically affects the air over time.
+
+### Layman Breakdown of "Climate Interventions"
+We designed the tool with advanced scientific terms originally for an impact factor, but here is what those complex policies actually mean in simple, everyday language:
+
+1. **Vertical Bio-Architecture** 
+   *👉 Simply planting heavy greenery and trees on the building's outer walls/balconies to physically block and filter out street dust before it enters the hospital.*
+2. **Zero-Emission 1km Radius** 
+   *👉 Creating a 1-kilometer "clean zone" around the hospital where regular petrol/diesel vehicles are banned. Only walking, cycles, or Electric Vehicles (like EV ambulances) are permitted.*
+3. **AI Priority Reroute** 
+   *👉 Automatically redirecting heavy traffic jams to specific alternate routes blocks away (e.g., shifting heavy vehicles away from Karunamayee towards the Central Park Bypass) so the hospital area stays quiet, and the air stays clean.*
+4. **100m Deep-Root Buffer** 
+   *👉 Planting a very thick, 100-meter-wide mini-forest between the hospital and the main road. The dense trees act as a natural wall against engine noise and exhaust fumes.*
+5. **Deep HEPA Isolation** 
+   *👉 Upgrading to the highest-quality, perfectly sealed hospital air-conditioning systems. This guarantees that even if the city's outdoor air gets terribly polluted, patients inside breathe 100% pure air.*
+
+---
 ## 📝 License
 MIT License
