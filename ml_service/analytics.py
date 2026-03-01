@@ -83,24 +83,19 @@ def analytics_summary(data: dict, live_data: dict = None) -> dict:
 
     peak_hour = PEAK_HOURS.get(dominant, 19)   # fallback to known table
 
-    # Try to compute peak more accurately using simulation
+    # Compute peak hour accurately using the same smooth curves as main.py
     try:
+        import math as _m
         worst_val = -1
         for h in range(24):
-            # Traffic multiplier
-            if 7 <= h <= 10:   t_m = 1.30
-            elif 17 <= h <= 20: t_m = 1.35
-            elif 11 <= h <= 16: t_m = 0.90
-            elif 21 <= h <= 23 or h == 0: t_m = 0.65
-            else: t_m = 0.45
-            # Wind multiplier
-            if 12 <= h <= 17:   w_m = 1.40
-            elif 6 <= h <= 11:  w_m = 0.85
-            else: w_m = 0.70
-            # Industry multiplier
-            if 8 <= h <= 18:   i_m = 1.05
-            elif 19 <= h <= 22: i_m = 0.80
-            else: i_m = 0.55
+            # Smooth Gaussian traffic (mirrors _simulate_hour in main.py)
+            t_m = 0.40 + 0.90 * _m.exp(-0.5*((h-8)/1.5)**2) + 0.95 * _m.exp(-0.5*((h-18)/1.5)**2)
+            w_m = 0.65 + 0.80 * _m.exp(-0.5*((h-15)/4.0)**2)
+            if h < 6:   i_m = 0.50
+            elif h < 9: i_m = 0.50 + 0.55*(h-6)/3.0
+            elif h <= 18: i_m = 1.05 - 0.04*_m.sin(_m.pi*(h-9)/9.0)
+            elif h <= 22: i_m = 1.05 - 0.55*(h-18)/4.0
+            else:       i_m = 0.50
 
             varied = {"traffic": base["traffic"] * t_m, "green": base["green"],
                       "industry": base["industry"] * i_m, "wind": base["wind"] * w_m}
