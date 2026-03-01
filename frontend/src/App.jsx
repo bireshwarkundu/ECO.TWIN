@@ -20,7 +20,7 @@ function App() {
         <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/archive" element={<HistoricalDashboard />} />
-        <Route path="/models" element={<ModelsSimulation />} />
+        <Route path="/features" element={<ModelsSimulation />} />
         <Route path="/about" element={<AboutManifesto />} />
         <Route path="/history" element={<History />} />
         <Route path="/settings" element={<Settings />} />
