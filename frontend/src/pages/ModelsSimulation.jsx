@@ -518,9 +518,9 @@ function TrafficDivergenceSimulator() {
                                 <MapPin size={16} color="#000" />
                                 <label style={{ fontSize: '13px', fontWeight: 900, color: '#000', letterSpacing: '1px' }}>SOURCE LOCATION</label>
                             </div>
-                            <select value={sourceZoneId} onChange={(e) => setSourceZoneId(e.target.value)} style={{ width: '100%', padding: '12px', border: '3px solid #000', fontFamily: "'Space Mono',monospace", fontSize: '15px', background: '#F4F4F0', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}>
-                                <option value="">Select Starting Point</option>
-                                {enrichedZones.sort((a, b) => a.zone_name.localeCompare(b.zone_name)).map(z => <option key={z.id} value={z.id} style={{ color: '#000' }}>{z.zone_name}</option>)}
+                            <select value={sourceZoneId} onChange={(e) => setSourceZoneId(e.target.value)} style={{ width: '100%', appearance: 'none', padding: '12px', border: '3px solid #000', fontFamily: "'Space Mono',monospace", fontSize: '15px', background: '#F4F4F0', color: '#000', fontWeight: 900, cursor: 'pointer' }}>
+                                <option value="" style={{ background: '#FFF', color: '#000', padding: '10px', fontFamily: "'Space Mono', monospace", fontWeight: 900 }}>Select Starting Point</option>
+                                {enrichedZones.sort((a, b) => a.zone_name.localeCompare(b.zone_name)).map(z => <option key={z.id} value={z.id} style={{ background: '#FFF', color: '#000', padding: '10px', fontFamily: "'Space Mono', monospace", fontWeight: 900 }}>{z.zone_name}</option>)}
                             </select>
                         </div>
 
@@ -529,9 +529,9 @@ function TrafficDivergenceSimulator() {
                                 <Navigation size={16} color="#000" />
                                 <label style={{ fontSize: '13px', fontWeight: 900, color: '#000', letterSpacing: '1px' }}>DESTINATION</label>
                             </div>
-                            <select value={destZoneId} onChange={(e) => setDestZoneId(e.target.value)} style={{ width: '100%', padding: '12px', border: '3px solid #000', fontFamily: "'Space Mono',monospace", fontSize: '15px', background: '#F4F4F0', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}>
-                                <option value="">Select Destination</option>
-                                {enrichedZones.sort((a, b) => a.zone_name.localeCompare(b.zone_name)).map(z => <option key={z.id} value={z.id} style={{ color: '#000' }}>{z.zone_name}</option>)}
+                            <select value={destZoneId} onChange={(e) => setDestZoneId(e.target.value)} style={{ width: '100%', appearance: 'none', padding: '12px', border: '3px solid #000', fontFamily: "'Space Mono',monospace", fontSize: '15px', background: '#F4F4F0', color: '#000', fontWeight: 900, cursor: 'pointer' }}>
+                                <option value="" style={{ background: '#FFF', color: '#000', padding: '10px', fontFamily: "'Space Mono', monospace", fontWeight: 900 }}>Select Destination</option>
+                                {enrichedZones.sort((a, b) => a.zone_name.localeCompare(b.zone_name)).map(z => <option key={z.id} value={z.id} style={{ background: '#FFF', color: '#000', padding: '10px', fontFamily: "'Space Mono', monospace", fontWeight: 900 }}>{z.zone_name}</option>)}
                             </select>
                         </div>
                     </div>
@@ -1280,10 +1280,10 @@ function CitizenHealthRiskDashboard() {
                     <select
                         value={activeZone.id}
                         onChange={(e) => setActiveZone(allZoneRisks.find(z => String(z.id) === e.target.value))}
-                        style={{ flex: 1, background: '#FFF', color: '#000', border: '3px solid #000', padding: '8px 16px', fontWeight: 900, fontSize: '14px', fontFamily: "'Space Mono', monospace", boxShadow: '4px 4px 0 #00CFFF', outline: 'none', cursor: 'pointer', textTransform: 'uppercase' }}
+                        style={{ flex: 1, appearance: 'none', background: '#FFF', color: '#000', border: '3px solid #000', padding: '10px 16px', fontWeight: 900, fontSize: '14px', fontFamily: "'Space Mono', monospace", boxShadow: '4px 4px 0 #00CFFF', outline: 'none', cursor: 'pointer', textTransform: 'uppercase' }}
                     >
                         {allZoneRisks.map((z, rank) => (
-                            <option key={z.id} value={z.id}>
+                            <option key={z.id} value={z.id} style={{ background: '#FFF', color: '#000', padding: '10px', fontFamily: "'Space Mono', monospace", fontWeight: 900, textTransform: 'uppercase' }}>
                                 #{rank + 1} - {z.zone_name.toUpperCase()} (RISK SCORE: {z.risk.overallRisk})
                             </option>
                         ))}
@@ -1298,7 +1298,7 @@ function CitizenHealthRiskDashboard() {
                         {/* OVERALL COMPOSITE SCORE */}
                         <div style={{ border: '4px solid #000', padding: '32px', textAlign: 'center', background: '#FFF', boxShadow: `8px 8px 0 ${riskColor(currentRisk.overallRisk)}`, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: '#000', color: '#FFF', padding: '6px', fontSize: '12px', fontWeight: 900, letterSpacing: '2px' }}>OVERALL ZONE RISK</div>
-                            <p style={{ color: riskColor(currentRisk.overallRisk), fontSize: '80px', fontWeight: 900, lineHeight: 1, marginTop: '20px', textShadow: '4px 4px 0 #000' }}>{currentRisk.overallRisk}</p>
+                            <p style={{ color: riskColor(currentRisk.overallRisk), fontSize: '80px', fontWeight: 900, lineHeight: 1, marginTop: '20px', textShadow: '4px 4px 0 #000', fontFamily: "'Space Mono',monospace" }}>{currentRisk.overallRisk}</p>
                             <p style={{ background: '#000', color: riskColor(currentRisk.overallRisk), fontSize: '20px', fontWeight: 900, padding: '4px 12px', display: 'inline-block', border: '2px solid #000', margin: '16px auto 0' }}>{riskLabel(currentRisk.overallRisk)}</p>
                             <p style={{ color: '#000', fontSize: '14px', fontWeight: 900, marginTop: '12px' }}>{activeZone.zone_name}</p>
                         </div>
@@ -1307,12 +1307,12 @@ function CitizenHealthRiskDashboard() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ border: '4px solid #000', display: 'flex', background: '#FFF', boxShadow: '6px 6px 0 #000' }}>
                                 <div style={{ background: '#000', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '140px' }}>
-                                    <p style={{ color: '#00CFFF', fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>COMPOSITE</p>
-                                    <p style={{ color: '#FFF', fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>AQI</p>
+                                    <p style={{ color: '#00CFFF', fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: "'Space Grotesk',sans-serif" }}>COMPOSITE</p>
+                                    <p style={{ color: '#FFF', fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: "'Space Grotesk',sans-serif" }}>AQI</p>
                                 </div>
                                 <div style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '24px', flex: 1, background: '#F4F4F0' }}>
-                                    <p style={{ color: '#000', fontSize: '50px', fontWeight: 900, lineHeight: 1 }}>{currentRisk.aqi}</p>
-                                    <p style={{ background: '#FF3366', color: '#000', border: '3px solid #000', fontSize: '16px', fontWeight: 900, padding: '4px 12px', boxShadow: '2px 2px 0 #000' }}>{getAQILabel(currentRisk.aqi)}</p>
+                                    <p style={{ color: '#000', fontSize: '50px', fontWeight: 900, lineHeight: 1, fontFamily: "'Space Mono',monospace" }}>{currentRisk.aqi}</p>
+                                    <p style={{ background: '#FF3366', color: '#000', border: '3px solid #000', fontSize: '16px', fontWeight: 900, padding: '4px 12px', boxShadow: '2px 2px 0 #000', fontFamily: "'Space Mono',monospace" }}>{getAQILabel(currentRisk.aqi)}</p>
                                 </div>
                             </div>
 
@@ -1326,7 +1326,7 @@ function CitizenHealthRiskDashboard() {
                                     <div key={label} style={{ border: '3px solid #000', padding: '12px', background: '#FFF', position: 'relative' }}>
                                         <div style={{ width: '100%', height: '4px', background: col, position: 'absolute', top: 0, left: 0, borderBottom: '2px solid #000' }} />
                                         <p style={{ color: '#000', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', marginTop: '4px' }}>{label}</p>
-                                        <p style={{ color: '#000', fontSize: '22px', fontWeight: 900, marginTop: '8px' }}>{val}<span style={{ fontSize: '12px', color: '#666', marginLeft: '4px' }}>{unit}</span></p>
+                                        <p style={{ color: '#000', fontSize: '22px', fontWeight: 900, marginTop: '8px', fontFamily: "'Space Mono',monospace" }}>{val}<span style={{ fontSize: '12px', color: '#666', marginLeft: '4px' }}>{unit}</span></p>
                                     </div>
                                 ))}
                             </div>
@@ -1338,7 +1338,7 @@ function CitizenHealthRiskDashboard() {
                         <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', borderBottom: '4px solid #000', paddingBottom: '8px' }}>
                                 <Activity size={24} color="#000" />
-                                <h3 style={{ color: '#000', fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>VULNERABLE POPULATION IMPACT</h3>
+                                <h3 style={{ color: '#000', fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', margin: 0, fontFamily: "'Space Grotesk',sans-serif" }}>VULNERABLE POPULATION IMPACT</h3>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
                                 {[
@@ -1356,7 +1356,7 @@ function CitizenHealthRiskDashboard() {
                                                     <p style={{ color: '#555', fontSize: '13px', fontWeight: 900 }}>{note}</p>
                                                 </div>
                                                 <div style={{ textAlign: 'right', background: '#000', padding: '8px 16px', color: '#FFF', border: `2px solid ${rc}` }}>
-                                                    <p style={{ color: rc, fontSize: '36px', fontWeight: 900, lineHeight: 1 }}>{risk}</p>
+                                                    <p style={{ color: rc, fontSize: '36px', fontWeight: 900, lineHeight: 1, fontFamily: "'Space Mono',monospace" }}>{risk}</p>
                                                     <p style={{ color: '#FFF', fontSize: '12px', fontWeight: 900, marginTop: '4px' }}>{riskLabel(risk)}</p>
                                                 </div>
                                             </div>
@@ -1374,8 +1374,8 @@ function CitizenHealthRiskDashboard() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
                                         <div style={{ background: '#FF3366', padding: '8px', border: '2px solid #000' }}><AlertTriangle size={36} color="#000" strokeWidth={3} /></div>
                                         <div>
-                                            <p style={{ color: '#FF3366', fontSize: '24px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>HIGH RISK PROTOCOL ENGAGED</p>
-                                            <p style={{ color: '#FFF', fontSize: '13px', fontWeight: 'bold' }}>IMMEDIATE MULTI-AGENCY ACTIONS REQUIRED</p>
+                                            <p style={{ color: '#FF3366', fontSize: '24px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', fontFamily: "'Space Grotesk',sans-serif" }}>HIGH RISK PROTOCOL ENGAGED</p>
+                                            <p style={{ color: '#FFF', fontSize: '13px', fontWeight: 'bold', fontFamily: "'Space Mono',monospace" }}>IMMEDIATE MULTI-AGENCY ACTIONS REQUIRED</p>
                                         </div>
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
@@ -1398,7 +1398,7 @@ function CitizenHealthRiskDashboard() {
 
                     {viewMode === 'radar' && (
                         <div style={{ flex: 1, border: '4px solid #000', background: '#FFF', padding: '24px', boxShadow: '8px 8px 0 #000' }}>
-                            <p style={{ color: '#000', background: '#FF00FF', display: 'inline-block', padding: '4px 12px', border: '2px solid #000', fontSize: '16px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '24px' }}>
+                            <p style={{ color: '#000', background: '#FF00FF', display: 'inline-block', padding: '4px 12px', border: '2px solid #000', fontSize: '16px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '24px', fontFamily: "'Space Grotesk',sans-serif" }}>
                                 POPULATION RISK RADAR
                             </p>
                             <div style={{ height: '400px' }}>
@@ -1417,7 +1417,7 @@ function CitizenHealthRiskDashboard() {
 
                     {viewMode === 'timeline' && (
                         <div style={{ flex: 1, border: '4px solid #000', background: '#FFF', padding: '24px', boxShadow: '8px 8px 0 #000' }}>
-                            <p style={{ color: '#000', background: '#00FF66', display: 'inline-block', padding: '4px 12px', border: '2px solid #000', fontSize: '16px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '24px' }}>
+                            <p style={{ color: '#000', background: '#00FF66', display: 'inline-block', padding: '4px 12px', border: '2px solid #000', fontSize: '16px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '24px', fontFamily: "'Space Grotesk',sans-serif" }}>
                                 24-HOUR FORECAST INDEX
                             </p>
                             <div style={{ height: '400px' }}>
@@ -1443,7 +1443,7 @@ function CitizenHealthRiskDashboard() {
                 {/* EMERGENCY CORRIDORS DRAWER */}
                 <div style={{ width: '380px', minWidth: '380px', borderLeft: '4px solid #000', background: '#FFF', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ padding: '24px', borderBottom: '4px solid #000', background: '#FF3366' }}>
-                        <p style={{ fontWeight: 900, fontSize: '18px', textTransform: 'uppercase', color: '#000', letterSpacing: '1px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <p style={{ fontWeight: 900, fontSize: '18px', textTransform: 'uppercase', color: '#000', letterSpacing: '1px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Space Grotesk',sans-serif" }}>
                             <Car size={24} /> EMERGENCY CORRIDORS
                         </p>
                         <p style={{ color: '#000', fontSize: '12px', fontWeight: 900, marginTop: '4px' }}>FASTEST CLEAN-AIR ROUTES</p>
@@ -1469,7 +1469,7 @@ function CitizenHealthRiskDashboard() {
                         ))}
 
                         <div style={{ border: '4px solid #000', padding: '16px', background: '#FFF', boxShadow: '4px 4px 0 #000', marginTop: '32px' }}>
-                            <p style={{ color: '#000', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '16px', borderBottom: '2px solid #000', paddingBottom: '8px' }}>PEAK EXPOSURE WINDOWS</p>
+                            <p style={{ color: '#000', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '16px', borderBottom: '2px solid #000', paddingBottom: '8px', fontFamily: "'Space Grotesk',sans-serif" }}>PEAK EXPOSURE WINDOWS</p>
                             {[
                                 { time: '08:00–10:00', risk: 'SEVERE', desc: 'School Rush' },
                                 { time: '17:00–21:00', risk: 'HIGH', desc: 'IT-Hub Exodus' },
