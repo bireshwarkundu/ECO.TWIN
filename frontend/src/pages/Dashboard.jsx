@@ -266,7 +266,7 @@ const Dashboard = () => {
                         <div className="h-[700px] w-full">
                             <MapComponent liveData={allStationsData} />
                         </div>
-                        <div className="bg-[#FDFBF7] border-t-4 border-black p-2 text-xs font-bold flex flex-wrap gap-4">
+                        {/* <div className="bg-[#FDFBF7] border-t-4 border-black p-2 text-xs font-bold flex flex-wrap gap-4">
                             <div className="flex items-center gap-1">
                                 <div className="w-3 h-3 bg-green border border-black"></div>
                                 <span>Low (0-40)</span>
@@ -287,7 +287,7 @@ const Dashboard = () => {
                                 <div className="w-3 h-3 bg-darkred border border-black"></div>
                                 <span>Severe (100+)</span>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 )}
 
