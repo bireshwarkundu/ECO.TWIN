@@ -10,17 +10,16 @@ contract EcoNexus is ERC721URIStorage {
 
     // 1. STATE VARIABLES
     mapping(address => uint256) public ecoBalance;
-    mapping(address => uint256) public lastMintTime;
+    // Removed lastMintTime mapping
     
-    // The "Tunable" Cooldown (Starts at 60 seconds)
-    uint256 public cooldownPeriod = 60; 
+    // Removed cooldownPeriod variable
 
     // The Boss (You)
     address public owner;
 
     // 2. EVENTS
     event DataMinted(uint256 indexed tokenId, address indexed miner, int256 lat, int256 lon, uint256 aqi, string ipfsHash);
-    event CooldownChanged(uint256 newTime);
+    // Removed CooldownChanged event
 
     // 3. MODIFIER (Security)
     modifier onlyOwner() {
@@ -32,41 +31,38 @@ contract EcoNexus is ERC721URIStorage {
         owner = msg.sender; // You become the owner when you deploy
     }
 
-    // 4. THE GOVERNANCE FUNCTION (Change time in future)
-    // Pass time in seconds (e.g., 3600 for 1 hour)
-    function setCooldown(uint256 _newSeconds) public onlyOwner {
-        cooldownPeriod = _newSeconds;
-        emit CooldownChanged(_newSeconds);
-    }
+    // 4. REMOVED: setCooldown function
 
-    // 5. THE MAIN FUNCTION
-    function submitData(int256 _lat, int256 _lon, uint256 _aqi, string memory _tokenURI) 
+    // 5. THE MAIN FUNCTION - UPDATED (cooldown removed)
+    function submitData(
+        address _user,
+        int256 _lat, 
+        int256 _lon, 
+        uint256 _aqi, 
+        string memory _tokenURI
+    ) 
         public 
+        onlyOwner
         returns (uint256)
     {
-        // Check the dynamic cooldown
-        require(block.timestamp >= lastMintTime[msg.sender] + cooldownPeriod, "Cooldown active: Please wait!");
+        // REMOVED: Cooldown check
 
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
 
-        _mint(msg.sender, newItemId);
+        // Mint NFT to the USER
+        _mint(_user, newItemId);
         _setTokenURI(newItemId, _tokenURI);
 
-        ecoBalance[msg.sender] += 10;
-        lastMintTime[msg.sender] = block.timestamp;
+        // Add ECO to USER's balance
+        ecoBalance[_user] += 10;
+        
+        // REMOVED: lastMintTime update
 
-        emit DataMinted(newItemId, msg.sender, _lat, _lon, _aqi, _tokenURI);
+        emit DataMinted(newItemId, _user, _lat, _lon, _aqi, _tokenURI);
 
         return newItemId;
     }
     
-    // Helper for Frontend
-    function getTimeUntilNextMint(address _user) public view returns (uint256) {
-        if (block.timestamp >= lastMintTime[_user] + cooldownPeriod) {
-            return 0;
-        } else {
-            return (lastMintTime[_user] + cooldownPeriod) - block.timestamp;
-        }
-    }
+    // REMOVED: getTimeUntilNextMint function
 }

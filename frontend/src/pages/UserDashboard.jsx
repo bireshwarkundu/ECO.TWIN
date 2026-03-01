@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Activity, MapPin, Database, Server, Cpu, CheckCircle, Clock, Wind, AlertTriangle, Thermometer, ShieldCheck, Droplets, Zap, ExternalLink } from 'lucide-react';
+import { Wallet, Activity, MapPin, Database, Server, Cpu, CheckCircle, Clock, Wind, AlertTriangle, Thermometer, ShieldCheck, Droplets, Zap, ExternalLink, RefreshCw } from 'lucide-react';
 import { getCalibratedAirData } from '../utils/fetchEnvironmentalData.js';
+import { ethers } from 'ethers';
+
+// Import contract ABI
+import EcoNexusABI from '../../../blockchain/build/contracts/EcoNexus.json' with { type: 'json' };
 
 const UserDashboard = () => {
-    const [balance, setBalance] = useState(124.5);
+    const [balance, setBalance] = useState(0);
     const [isMining, setIsMining] = useState(false);
     const [logs, setLogs] = useState([]);
     const [walletAddress, setWalletAddress] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
     const [chainId, setChainId] = useState(null);
+    
+    // Blockchain states
+    const [provider, setProvider] = useState(null);
+    const [contract, setContract] = useState(null);
+    const [isLoadingBalance, setIsLoadingBalance] = useState(false);
     
     // DATA STATES
     const [sensorData, setSensorData] = useState(null);
@@ -24,70 +33,126 @@ const UserDashboard = () => {
     const [mintResult, setMintResult] = useState(null);
     const [signature, setSignature] = useState(null);
 
-    // 1. Wallet Connection - Opens MetaMask for user to select account
+    // Contract configuration
+    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x2af355903755f17611C900e817a4a681E6883016";
+
+    // Initialize provider and contract when wallet connects
+    useEffect(() => {
+        if (walletAddress && window.ethereum) {
+            const setupBlockchain = async () => {
+                try {
+                    const web3Provider = new ethers.BrowserProvider(window.ethereum);
+                    setProvider(web3Provider);
+                    
+                    const signer = await web3Provider.getSigner();
+                    const ecoContract = new ethers.Contract(CONTRACT_ADDRESS, EcoNexusABI.abi, signer);
+                    setContract(ecoContract);
+                    
+                    // Fetch contract data
+                    await fetchContractData(ecoContract, walletAddress);
+                    
+                    setLogs(prev => [...prev, "> ✅ Blockchain connection established"]);
+                } catch (error) {
+                    console.error("Blockchain setup error:", error);
+                    setLogs(prev => [...prev, "> ❌ Failed to connect to blockchain"]);
+                }
+            };
+            
+            setupBlockchain();
+        }
+    }, [walletAddress]);
+
+    // Fetch all contract data - UPDATED: removed cooldown
+    const fetchContractData = async (contractInstance, address) => {
+        if (!contractInstance || !address) return;
+        
+        try {
+            setIsLoadingBalance(true);
+            
+            // Fetch ECO balance
+            const balanceWei = await contractInstance.ecoBalance(address);
+            const balanceEco = Number(balanceWei.toString());
+            setBalance(balanceEco);
+            
+            setLogs(prev => [...prev, 
+                `> 💰 ECO Balance: ${balanceEco} ECO`,
+            ]);
+        } catch (error) {
+            console.error("Error fetching contract data:", error);
+        } finally {
+            setIsLoadingBalance(false);
+        }
+    };
+
+    // Refresh data manually
+    const refreshData = async () => {
+        if (contract && walletAddress) {
+            await fetchContractData(contract, walletAddress);
+        }
+    };
+
+    // 1. Wallet Connection
     const connectWallet = async () => {
-    if (!window.ethereum) {
-        alert("MetaMask is not installed!");
-        window.open("https://metamask.io/download/", "_blank");
-        return;
-    }
+        if (!window.ethereum) {
+            alert("MetaMask is not installed!");
+            window.open("https://metamask.io/download/", "_blank");
+            return;
+        }
 
-    try {
-        setIsConnecting(true);
+        try {
+            setIsConnecting(true);
 
-        // 1️⃣ Try already connected accounts (no popup)
-        let accounts = await window.ethereum.request({
-            method: "eth_accounts",
-        });
-
-        // 2️⃣ If none, open MetaMask (popup WILL appear)
-        if (!accounts || accounts.length === 0) {
-            setLogs(prev => [...prev, "> 🔄 Opening MetaMask... Select an account"]);
-            accounts = await window.ethereum.request({
-                method: "eth_requestAccounts",
+            let accounts = await window.ethereum.request({
+                method: "eth_accounts",
             });
+
+            if (!accounts || accounts.length === 0) {
+                setLogs(prev => [...prev, "> 🔄 Opening MetaMask... Select an account"]);
+                accounts = await window.ethereum.request({
+                    method: "eth_requestAccounts",
+                });
+            }
+
+            if (!accounts || accounts.length === 0) {
+                throw new Error("No account selected");
+            }
+
+            const selectedAccount = accounts[0];
+            setWalletAddress(selectedAccount);
+
+            setLogs(prev => [
+                ...prev,
+                `> ✅ Connected: ${selectedAccount.slice(0, 6)}...${selectedAccount.slice(-4)}`
+            ]);
+
+            const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
+            const chainId = parseInt(chainIdHex, 16);
+            setChainId(chainId);
+
+            const networks = {
+                1: "Ethereum Mainnet",
+                137: "Polygon Mainnet",
+                80001: "Polygon Mumbai",
+                11155111: "Sepolia",
+            };
+
+            setLogs(prev => [
+                ...prev,
+                `> 🌐 Network: ${networks[chainId] || "Unknown"} (${chainId})`
+            ]);
+
+            if (chainId !== 80001 && chainId !== 137 && chainId !== 1337 && chainId !== 5777) {
+                setLogs(prev => [...prev, "> ⚠️ Please switch to Polygon or local network"]);
+            }
+
+        } catch (error) {
+            handleWalletError(error);
+        } finally {
+            setIsConnecting(false);
         }
+    };
 
-        if (!accounts || accounts.length === 0) {
-            throw new Error("No account selected");
-        }
-
-        // MetaMask decides the default account, not you
-        const selectedAccount = accounts[0];
-        setWalletAddress(selectedAccount);
-
-        setLogs(prev => [
-            ...prev,
-            `> ✅ Connected: ${selectedAccount.slice(0, 6)}...${selectedAccount.slice(-4)}`
-        ]);
-
-        // Network
-        const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
-        const chainId = parseInt(chainIdHex, 16);
-        setChainId(chainId);
-
-        const networks = {
-            1: "Ethereum Mainnet",
-            137: "Polygon Mainnet",
-            80001: "Polygon Mumbai",
-            11155111: "Sepolia",
-        };
-
-        setLogs(prev => [
-            ...prev,
-            `> 🌐 Network: ${networks[chainId] || "Unknown"} (${chainId})`
-        ]);
-
-        // Balance
-        const balanceHex = await window.ethereum.request({
-            method: "eth_getBalance",
-            params: [selectedAccount, "latest"],
-        });
-
-        const balance = (parseInt(balanceHex, 16) / 1e18).toFixed(4);
-        setLogs(prev => [...prev, `> 💰 Balance: ${balance} ETH`]);
-
-    } catch (error) {
+    const handleWalletError = (error) => {
         if (error.code === 4001) {
             setLogs(prev => [...prev, "> ❌ User rejected connection"]);
         } else if (error.code === -32002) {
@@ -96,23 +161,25 @@ const UserDashboard = () => {
             console.error(error);
             setLogs(prev => [...prev, `> ❌ ${error.message}`]);
         }
-    } finally {
-        setIsConnecting(false);
-    }
-};
+    };
 
-    // Add account and network change listeners
+    // Account and network change listeners
     useEffect(() => {
         if (window.ethereum) {
-            const handleAccountsChanged = (accounts) => {
+            const handleAccountsChanged = async (accounts) => {
                 if (accounts.length === 0) {
-                    // User disconnected/locked wallet
                     setWalletAddress('');
+                    setBalance(0);
+                    setContract(null);
+                    setProvider(null);
                     setLogs(prev => [...prev, "> 🔒 Wallet disconnected"]);
                 } else if (accounts[0] !== walletAddress) {
-                    // Account changed
                     setWalletAddress(accounts[0]);
                     setLogs(prev => [...prev, `> 🔄 Switched to: ${accounts[0].substring(0, 6)}...${accounts[0].substring(38)}`]);
+                    
+                    if (contract) {
+                        await fetchContractData(contract, accounts[0]);
+                    }
                 }
             };
             
@@ -125,8 +192,14 @@ const UserDashboard = () => {
                 else if (networkId === 137) networkName = 'Polygon Mainnet';
                 else if (networkId === 80001) networkName = 'Polygon Mumbai';
                 else if (networkId === 11155111) networkName = 'Sepolia';
+                else if (networkId === 1337) networkName = 'Ganache';
+                else if (networkId === 5777) networkName = 'Ganache CLI';
                 
                 setLogs(prev => [...prev, `> 🔄 Network changed to: ${networkName} (${networkId})`]);
+                
+                if (walletAddress) {
+                    window.location.reload();
+                }
             };
             
             window.ethereum.on('accountsChanged', handleAccountsChanged);
@@ -137,11 +210,7 @@ const UserDashboard = () => {
                 window.ethereum.removeListener('chainChanged', handleChainChanged);
             };
         }
-    }, [walletAddress]);
-
-    useEffect(() => {
-        console.log("Sensor Data Updated:", sensorData);
-    }, [sensorData]);
+    }, [walletAddress, contract]);
 
     // Helper: Sign message with MetaMask
     const signMessage = async (message) => {
@@ -163,18 +232,44 @@ const UserDashboard = () => {
         }
     };
 
-    // 2. Step 1: Fetch Data
+    // Switch network
+    const switchToPolygon = async () => {
+        if (!window.ethereum) return;
+        
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x13881' }],
+            });
+        } catch (switchError) {
+            if (switchError.code === 4902) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x13881',
+                            chainName: 'Polygon Mumbai',
+                            nativeCurrency: {
+                                name: 'MATIC',
+                                symbol: 'MATIC',
+                                decimals: 18
+                            },
+                            rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
+                            blockExplorerUrls: ['https://mumbai.polygonscan.com/']
+                        }],
+                    });
+                } catch (addError) {
+                    console.error("Failed to add network:", addError);
+                }
+            }
+            console.error("Failed to switch network:", switchError);
+        }
+    };
+
+    // 2. Fetch Data - UPDATED: removed cooldown check
     const toggleMining = async () => {
         if (isMining) {
-            // Reset Everything on Stop
-            setIsMining(false);
-            setSensorData(null);
-            setLocation(null);
-            setVerificationResult(null);
-            setDeviation(null);
-            setMintResult(null);
-            setSignature(null);
-            setLogs(prev => [...prev, "> Session Terminated."]);
+            resetSession();
             return;
         }
 
@@ -196,7 +291,6 @@ const UserDashboard = () => {
                 setLogs(prev => [...prev, `> ✅ GPS Signal Acquired: ${lat.toFixed(4)}, ${lon.toFixed(4)}`]);
                 setLogs(prev => [...prev, "> Contacting environmental satellites..."]);
 
-                // CALL YOUR LOCAL NODE API
                 const data = await getCalibratedAirData(lat, lon);
                 
                 if (data) {
@@ -207,19 +301,7 @@ const UserDashboard = () => {
                     setIsMining(false);
                 }
             },
-            (err) => {
-                console.error(err);
-                let errorMessage = "> ❌ GPS Access Denied.";
-                if (err.code === 1) {
-                    errorMessage = "> ❌ Location permission denied. Please enable location access.";
-                } else if (err.code === 2) {
-                    errorMessage = "> ❌ Position unavailable. Check GPS signal.";
-                } else if (err.code === 3) {
-                    errorMessage = "> ❌ Location request timed out.";
-                }
-                setLogs(prev => [...prev, errorMessage]);
-                setIsMining(false);
-            },
+            handleGeoError,
             {
                 enableHighAccuracy: true,
                 timeout: 10000,
@@ -228,7 +310,32 @@ const UserDashboard = () => {
         );
     };
 
-    // 3. Step 2: Verify Data (Call Backend)
+    const handleGeoError = (err) => {
+        console.error(err);
+        let errorMessage = "> ❌ GPS Access Denied.";
+        if (err.code === 1) {
+            errorMessage = "> ❌ Location permission denied. Please enable location access.";
+        } else if (err.code === 2) {
+            errorMessage = "> ❌ Position unavailable. Check GPS signal.";
+        } else if (err.code === 3) {
+            errorMessage = "> ❌ Location request timed out.";
+        }
+        setLogs(prev => [...prev, errorMessage]);
+        setIsMining(false);
+    };
+
+    const resetSession = () => {
+        setIsMining(false);
+        setSensorData(null);
+        setLocation(null);
+        setVerificationResult(null);
+        setDeviation(null);
+        setMintResult(null);
+        setSignature(null);
+        setLogs(prev => [...prev, "> Session Terminated."]);
+    };
+
+    // 3. Verify Data
     const handleVerify = async () => {
         if (!sensorData || !location) return;
 
@@ -243,21 +350,7 @@ const UserDashboard = () => {
                 body: JSON.stringify({
                     lat: location.lat,
                     lon: location.lon,
-                    userReadings: {
-                        co: sensorData.co,
-                        pm25: sensorData.pm25,
-                        pm10: sensorData.pm10,
-                        no: sensorData.no,
-                        no2: sensorData.no2,
-                        nox: sensorData.nox,
-                        o3: sensorData.o3,
-                        pm10: sensorData.pm10,
-                        pm25: sensorData.pm25,
-                        relativehumidity: sensorData.relativehumidity,
-                        so2: sensorData.so2,
-                        temperature: sensorData.temperature
-
-                    }
+                    userReadings: sensorData
                 })
             });
 
@@ -282,7 +375,7 @@ const UserDashboard = () => {
         }
     };
 
-    // 4. Step 3: Mint NFT (Call Backend Endpoint)
+    // 4. Mint NFT - UPDATED: removed cooldown check
     const handleMint = async () => {
         if (!sensorData || !location || !walletAddress) {
             alert("Please connect wallet and verify data first");
@@ -293,18 +386,15 @@ const UserDashboard = () => {
         setLogs(prev => [...prev, "> 🔏 Requesting signature from MetaMask..."]);
 
         try {
-            // Create message to sign
             const timestamp = Date.now();
             const message = `Mint EcoPulse NFT\nLocation: ${location.lat.toFixed(4)}, ${location.lon.toFixed(4)}\nPM2.5: ${sensorData.pm25}\nTimestamp: ${timestamp}`;
             
-            // Get signature from MetaMask
             setLogs(prev => [...prev, "> ✍️ Please sign the message in MetaMask..."]);
             const sig = await signMessage(message);
             setSignature(sig);
             
             setLogs(prev => [...prev, "> ✅ Signature obtained", "> ⛓️ Submitting to blockchain relayer..."]);
 
-            // Prepare data for minting
             const mintData = {
                 userAddress: walletAddress,
                 signature: sig,
@@ -318,7 +408,6 @@ const UserDashboard = () => {
                 }
             };
 
-            // Call your mint endpoint
             const response = await fetch('http://localhost:3000/api/user/mint', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -329,20 +418,23 @@ const UserDashboard = () => {
 
             if (result.success) {
                 setMintResult(result);
-                setBalance(prev => prev + 10); // Add reward
+                
+                // Refresh balance from blockchain
+                if (contract) {
+                    await fetchContractData(contract, walletAddress);
+                }
+                
                 setLogs(prev => [...prev, 
                     `> ✅ MINT SUCCESSFUL!`,
                     `> Token ID: ${result.tokenId || 'Unknown'}`,
                     `> Tx Hash: ${result.txHash ? result.txHash.substring(0, 10) + '...' + result.txHash.substring(58) : 'Unknown'}`,
-                    `> 💰 +10 ECO Reward Received!`,
+                    `> 💰 +10 ECO Added to Balance!`,
                 ]);
                 
-                // Optional: Show explorer link
                 if (result.explorerUrl) {
                     setLogs(prev => [...prev, `> 🔗 View: ${result.explorerUrl}`]);
                 }
                 
-                // Optional: Show OpenSea link
                 if (result.openSeaUrl) {
                     setLogs(prev => [...prev, `> 🖼️ OpenSea: ${result.openSeaUrl}`]);
                 }
@@ -359,7 +451,7 @@ const UserDashboard = () => {
         }
     };
 
-    // Auto-scroll logs to bottom
+    // Auto-scroll logs
     useEffect(() => {
         const terminal = document.getElementById('terminal-logs');
         if (terminal) {
@@ -374,7 +466,16 @@ const UserDashboard = () => {
                 <div className="flex items-center gap-4">
                     <div className="bg-white border-4 border-black px-4 py-2 font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 text-lg">
                         <span className="w-4 h-4 bg-[#00FF66] rounded-full animate-pulse border-2 border-black" />
-                        {balance} ECO
+                        {isLoadingBalance ? "Loading..." : `${balance} ECO`}
+                        {walletAddress && (
+                            <button 
+                                onClick={refreshData}
+                                className="ml-2 hover:bg-gray-100 p-1 rounded"
+                                title="Refresh Data"
+                            >
+                                <RefreshCw size={14} />
+                            </button>
+                        )}
                     </div>
                     <span className="bg-[#FFE600] border-4 border-black px-4 py-2 text-2xl font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         ECO.PULSE
@@ -412,10 +513,16 @@ const UserDashboard = () => {
                         )}
 
                         {/* Network Status */}
-                        {walletAddress && chainId && chainId !== 80001 && chainId !== 137 && (
+                        {walletAddress && chainId && chainId !== 80001 && chainId !== 137 && chainId !== 1337 && chainId !== 5777 && (
                             <div className="bg-yellow-400 border-4 border-black p-3 mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
                                 <AlertTriangle size={20} />
-                                <span className="font-bold">Switch to Polygon network for best experience</span>
+                                <span className="font-bold">Switch to Polygon or local network</span>
+                                <button 
+                                    onClick={switchToPolygon}
+                                    className="ml-auto bg-black text-white px-2 py-1 text-xs font-bold hover:bg-gray-800"
+                                >
+                                    SWITCH
+                                </button>
                             </div>
                         )}
 
@@ -430,7 +537,7 @@ const UserDashboard = () => {
                             </button>
                         )}
 
-                        {/* STEP 2: VERIFY DATA (Appears after fetch) */}
+                        {/* STEP 2: VERIFY DATA */}
                         {sensorData && !verificationResult && (
                             <div className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                                 <p className="font-bold mb-4 flex items-center gap-2">
@@ -451,7 +558,7 @@ const UserDashboard = () => {
                             </div>
                         )}
 
-                        {/* STEP 3: MINT REWARD (Appears after success) */}
+                        {/* STEP 3: MINT REWARD - UPDATED: removed cooldown */}
                         {verificationResult === 'success' && !mintResult && (
                             <div className="bg-[#00FF66] border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] animate-in zoom-in duration-300">
                                 <p className="font-bold mb-2 flex items-center gap-2">
@@ -506,7 +613,7 @@ const UserDashboard = () => {
                                     )}
                                 </div>
                                 <button 
-                                    onClick={toggleMining}
+                                    onClick={resetSession}
                                     className="mt-3 w-full bg-[#0055FF] text-white border-2 border-black py-1 font-bold hover:bg-[#0044CC] transition-all"
                                 >
                                     Start New Session
@@ -522,7 +629,7 @@ const UserDashboard = () => {
                                     Verification Failed (Deviation: {deviation}%)
                                 </p>
                                 <button 
-                                    onClick={toggleMining} 
+                                    onClick={resetSession} 
                                     className="mt-2 underline font-bold hover:text-white/80 transition-colors"
                                 >
                                     Restart Session →
