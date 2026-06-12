@@ -1,7 +1,7 @@
 import joblib
 import os
 
-MODEL_DIR = "ml_service/models"
+MODEL_DIR = "models"
 
 pollutants = ["co","no","no2","pm25","pm10","o3","so2"]
 

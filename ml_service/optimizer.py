@@ -1,4 +1,4 @@
-from ml_service.simulator import simulate_conditions
+from simulator import simulate_conditions
 
 
 def _calc_aqi(pm25: float) -> float:
