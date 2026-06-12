@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from datetime import datetime
 import requests
 
-from ml_service.config import OPENAQ_API_KEY, LOCATION_ID
-from ml_service.simulator import simulate_conditions
-from ml_service.optimizer import optimize_policy
-from ml_service.analytics import analytics_summary
+from config import OPENAQ_API_KEY, LOCATION_ID
+from simulator import simulate_conditions
+from optimizer import optimize_policy
+from analytics import analytics_summary
 
 app = FastAPI(title="Urban Digital Twin API")
 

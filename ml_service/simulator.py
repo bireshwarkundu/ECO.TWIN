@@ -1,4 +1,4 @@
-from ml_service.predictor import predict_pollutant
+from predictor import predict_pollutant
 
 # ── Baseline policy inputs (the "neutral" reference point) ──────────────────
 BASELINE = {

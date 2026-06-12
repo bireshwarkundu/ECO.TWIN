@@ -1,5 +1,5 @@
 from datetime import datetime
-from ml_service.model_loader import models
+from model_loader import models
 import numpy as np
 
 # Baseline sensor-range features (what the model was trained on)
